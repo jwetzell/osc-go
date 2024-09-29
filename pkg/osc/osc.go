@@ -105,7 +105,7 @@ func argsToBuffer(args []OSCArg) []byte {
 	return argBuffers
 }
 
-func ToBuffer(message OSCMessage) []byte {
+func ToBytes(message OSCMessage) []byte {
 	oscBuffer := []byte{}
 
 	oscBuffer = append(oscBuffer, stringToOSCBytes(message.Address)...)
