@@ -3,7 +3,9 @@ package osc
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -69,6 +71,7 @@ func byteArrayToOSCBytes(bytes []byte) []byte {
 }
 
 func argsToBuffer(args []OSCArg) []byte {
+	//TODO(jwetzell): add error handling
 	var argBuffers = []byte{}
 
 	for _, arg := range args {
@@ -98,8 +101,7 @@ func argsToBuffer(args []OSCArg) []byte {
 				fmt.Println("OSC arg had blob type but non-blob value.")
 			}
 		default:
-			fmt.Print("unhandled osc type: ")
-			fmt.Printf("%s.\n", oscType)
+			fmt.Printf("unhandled osc type: %s.\n")
 		}
 	}
 	return argBuffers
@@ -122,4 +124,138 @@ func ToBytes(message OSCMessage) []byte {
 	oscBuffer = append(oscBuffer, argsToBuffer(message.Args)...)
 
 	return oscBuffer
+}
+
+func readOSCString(bytes []byte) (string, []byte) {
+	//TODO(jwetzell): add error handling
+	oscString := ""
+	stringFinished := false
+	stringEndIndex := 0
+	remainingBytes := []byte{}
+
+	for index, byteIn := range bytes {
+		if !stringFinished {
+			if byteIn == 0 {
+				oscString = string(bytes[0:index])
+				stringEndIndex = index + 1
+				break
+			}
+		}
+	}
+
+	stringPadding := 4 - (stringEndIndex % 4)
+
+	if stringPadding < 4 {
+		stringEndIndex = stringEndIndex + stringPadding
+	}
+
+	remainingBytes = bytes[stringEndIndex:]
+
+	return oscString, remainingBytes
+}
+
+func readOSCInt(bytes []byte) (int32, []byte, error) {
+	if len(bytes) < 4 {
+		return 0, bytes, errors.New("int data must be at least 4 bytes large")
+	}
+	bits := binary.BigEndian.Uint32(bytes[0:4])
+	return int32(bits), bytes[4:], nil
+}
+
+func readOSCFloat(bytes []byte) (float32, []byte, error) {
+	if len(bytes) < 4 {
+		return 0, bytes, errors.New("float data must be at least 4 bytes large")
+	}
+	bits := binary.BigEndian.Uint32(bytes[0:4])
+	return math.Float32frombits(bits), bytes[4:], nil
+}
+
+func readOSCBlob(bytes []byte) ([]byte, []byte, error) {
+	blobLength, remainingBytes, err := readOSCInt(bytes)
+
+	if err != nil {
+		return []byte{}, bytes, errors.New("problem reading blob data size")
+	}
+
+	if len(remainingBytes) < int(blobLength) {
+		return []byte{}, bytes, errors.New("blob data specified a size larger than the remaining message data")
+	}
+
+	blobLengthPadding := 4 - (blobLength % 4)
+	blobEnd := 4 + blobLength
+
+	if blobLengthPadding < 4 {
+		blobEnd = blobEnd + blobLengthPadding
+	}
+	return bytes[4 : 4+blobLength], bytes[blobEnd:], nil
+}
+
+func readOSCArg(bytes []byte, oscType string) (OSCArg, []byte, error) {
+	var readArgError error
+
+	oscArg := OSCArg{}
+	oscArg.Type = oscType
+
+	remainingBytes := []byte{}
+	//TODO(jwetzell): add error handling
+	switch oscType {
+	case "s":
+		argString, bytesLeft := readOSCString(bytes)
+		oscArg.Value = argString
+		remainingBytes = bytesLeft
+	case "i":
+		argInt, bytesLeft, error := readOSCInt(bytes)
+		if error != nil {
+			readArgError = error
+		}
+		oscArg.Value = argInt
+		remainingBytes = bytesLeft
+	case "f":
+		argFloat, bytesLeft, error := readOSCFloat(bytes)
+		if error != nil {
+			readArgError = error
+		}
+		oscArg.Value = argFloat
+		remainingBytes = bytesLeft
+	case "b":
+		argBytes, bytesLeft, error := readOSCBlob(bytes)
+		if error != nil {
+			readArgError = error
+		}
+		oscArg.Value = argBytes
+		remainingBytes = bytesLeft
+	default:
+		fmt.Printf("unsupported osc type: %s\n", oscType)
+		readArgError = errors.New("unsupported osc type: " + oscType)
+	}
+	return oscArg, remainingBytes, readArgError
+}
+
+func FromBytes(bytes []byte) (OSCMessage, error) {
+	//TODO(jwetzell): add Message and Bundle support
+	address, typeAndArgBytes := readOSCString(bytes)
+
+	oscMessage := OSCMessage{
+		Address: address,
+		Args:    []OSCArg{},
+	}
+
+	typeString, argBytes := readOSCString(typeAndArgBytes)
+
+	for index, oscType := range typeString {
+		if index == 0 {
+			if oscType != ',' {
+				return OSCMessage{}, errors.New("type string is malformed")
+			}
+		} else {
+			oscArg, remainingBytes, error := readOSCArg(argBytes, string(oscType))
+			if error != nil {
+				return oscMessage, error
+			}
+			argBytes = remainingBytes
+			oscMessage.Args = append(oscMessage.Args, oscArg)
+		}
+	}
+
+	return oscMessage, nil
 }
