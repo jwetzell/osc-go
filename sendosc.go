@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net"
-	"os"
 	"strconv"
 	"strings"
 
@@ -43,7 +42,7 @@ func integerToOSCBytes(number int32) []byte {
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, number)
 	if err != nil {
-		fmt.Println("binary.Write failed:", err)
+		panic(err)
 	}
 	return buf.Bytes()
 }
@@ -52,7 +51,7 @@ func floatToOSCBytes(number float32) []byte {
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, number)
 	if err != nil {
-		fmt.Println("binary.Write failed:", err)
+		panic(err)
 	}
 	return buf.Bytes()
 }
@@ -142,10 +141,6 @@ func main() {
 	var rootCmd = &cobra.Command{
 		Use: "sendosc",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(Host)
-			fmt.Println(Port)
-			fmt.Println(Address)
-			fmt.Println(Args)
 			send(Host, Port, Address, Args, Types, Protocol, Slip)
 		},
 	}
@@ -223,7 +218,6 @@ func send(host string, port int32, address string, args []string, types []string
 
 		oscArgs = append(oscArgs, argToTypedArg(arg, oscType))
 	}
-	fmt.Println(oscArgs)
 
 	oscMessage := OSCMessage{
 		Address: address,
@@ -240,12 +234,12 @@ func send(host string, port int32, address string, args []string, types []string
 	conn, err := net.Dial(protocol, netAddress)
 	if err != nil {
 		fmt.Printf("Dial err %v", err)
-		os.Exit(-1)
+		panic(err)
 	}
 	defer conn.Close()
 
 	if _, err = conn.Write([]byte(oscMessageBuffer)); err != nil {
 		fmt.Printf("Write err %v", err)
-		os.Exit(-1)
+		panic(err)
 	}
 }
