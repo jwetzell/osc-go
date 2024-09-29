@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"net"
 	"os"
@@ -133,8 +134,10 @@ func main() {
 	var Host string
 	var Port int32
 	var Address string
+	var Protocol string
 	var Args []string
 	var Types []string
+	var Slip bool
 
 	var rootCmd = &cobra.Command{
 		Use: "sendosc",
@@ -143,14 +146,16 @@ func main() {
 			fmt.Println(Port)
 			fmt.Println(Address)
 			fmt.Println(Args)
-			send(Host, Port, Address, Args, Types)
+			send(Host, Port, Address, Args, Types, Protocol, Slip)
 		},
 	}
 	rootCmd.Flags().StringVar(&Host, "host", "", "host to send OSC message to")
 	rootCmd.Flags().Int32Var(&Port, "port", 9999, "port to send OSC message to")
 	rootCmd.Flags().StringVar(&Address, "address", "", "OSC address")
+	rootCmd.Flags().StringVar(&Protocol, "protocol", "udp", "protocol to use to send (tcp or udp)")
 	rootCmd.Flags().StringArrayVar(&Args, "arg", []string{}, "OSC args")
 	rootCmd.Flags().StringArrayVar(&Types, "type", []string{}, "OSC types")
+	rootCmd.Flags().BoolVar(&Slip, "slip", false, "whether to slip encode the OSC Message bytes")
 	rootCmd.MarkFlagRequired("host")
 	rootCmd.MarkFlagRequired("port")
 	rootCmd.MarkFlagRequired("address")
@@ -201,7 +206,12 @@ func argToTypedArg(rawArg string, oscType string) OSCArg {
 	}
 }
 
-func send(host string, port int32, address string, args []string, types []string) {
+func slipEncode(bytes []byte) []byte {
+	//TODO(jwetzell): implement slip encoding
+	return bytes
+}
+
+func send(host string, port int32, address string, args []string, types []string, protocol string, slip bool) {
 
 	oscArgs := []OSCArg{}
 
@@ -222,8 +232,12 @@ func send(host string, port int32, address string, args []string, types []string
 
 	oscMessageBuffer := messageToBuffer(oscMessage)
 
+	if slip {
+		oscMessageBuffer = slipEncode(oscMessageBuffer)
+	}
+
 	netAddress := fmt.Sprintf("%s:%d", host, port)
-	conn, err := net.Dial("udp", netAddress)
+	conn, err := net.Dial(protocol, netAddress)
 	if err != nil {
 		fmt.Printf("Dial err %v", err)
 		os.Exit(-1)
