@@ -108,6 +108,7 @@ func argsToBuffer(args []OSCArg) []byte {
 }
 
 func ToBytes(message OSCMessage) []byte {
+	//TODO(jwetzell): add error handling
 	oscBuffer := []byte{}
 
 	oscBuffer = append(oscBuffer, stringToOSCBytes(message.Address)...)
