@@ -1,4 +1,4 @@
-module sendosc
+module github.com/jwetzell/osc-go
 
 go 1.23.1
 
