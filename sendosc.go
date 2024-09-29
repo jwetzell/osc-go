@@ -202,8 +202,25 @@ func argToTypedArg(rawArg string, oscType string) OSCArg {
 }
 
 func slipEncode(bytes []byte) []byte {
-	//TODO(jwetzell): implement slip encoding
-	return bytes
+	END := byte(0xc0)
+	ESC := byte(0xdb)
+	ESC_END := byte(0xdc)
+	ESC_ESC := byte(0xdd)
+
+	var encodedBytes = []byte{}
+
+	for _, byteToEncode := range bytes {
+		if byteToEncode == END {
+			encodedBytes = append(encodedBytes, ESC_END)
+		} else if byteToEncode == ESC {
+			encodedBytes = append(encodedBytes, ESC_ESC)
+		} else {
+			encodedBytes = append(encodedBytes, byteToEncode)
+		}
+	}
+
+	encodedBytes = append(encodedBytes, END)
+	return encodedBytes
 }
 
 func send(host string, port int32, address string, args []string, types []string, protocol string, slip bool) {
