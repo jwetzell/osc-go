@@ -1,6 +1,9 @@
+name: "release go binaries for multiple os/arch"
+
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+      - '*'
 
 permissions:
     contents: write
