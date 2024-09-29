@@ -22,7 +22,7 @@ type OSCMessage struct {
 	Args    []OSCArg
 }
 
-func stringToBuffer(rawString string) []byte {
+func stringToOSCBytes(rawString string) []byte {
 	var sb strings.Builder
 
 	sb.WriteString(rawString)
@@ -38,7 +38,7 @@ func stringToBuffer(rawString string) []byte {
 	return []byte(sb.String())
 }
 
-func integerToBuffer(number int32) []byte {
+func integerToOSCBytes(number int32) []byte {
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, number)
 	if err != nil {
@@ -47,7 +47,7 @@ func integerToBuffer(number int32) []byte {
 	return buf.Bytes()
 }
 
-func floatToBuffer(number float32) []byte {
+func floatToOSCBytes(number float32) []byte {
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, number)
 	if err != nil {
@@ -63,19 +63,19 @@ func argsToBuffer(args []OSCArg) []byte {
 		switch oscType := arg.Type; oscType {
 		case "s":
 			if value, ok := arg.Value.(string); ok {
-				argBuffers = append(argBuffers, stringToBuffer(value)...)
+				argBuffers = append(argBuffers, stringToOSCBytes(value)...)
 			} else {
 				fmt.Println("OSC arg had string type but non-string value.")
 			}
 		case "i":
 			if value, ok := arg.Value.(int32); ok {
-				argBuffers = append(argBuffers, integerToBuffer(value)...)
+				argBuffers = append(argBuffers, integerToOSCBytes(value)...)
 			} else {
 				fmt.Println("OSC arg had integer type but non-integer value.")
 			}
 		case "f":
 			if value, ok := arg.Value.(float32); ok {
-				argBuffers = append(argBuffers, floatToBuffer(value)...)
+				argBuffers = append(argBuffers, floatToOSCBytes(value)...)
 			} else {
 				fmt.Println("OSC arg had float type but non-float value.")
 			}
@@ -90,7 +90,7 @@ func argsToBuffer(args []OSCArg) []byte {
 func messageToBuffer(message OSCMessage) []byte {
 	oscBuffer := []byte{}
 
-	oscBuffer = append(oscBuffer, stringToBuffer(message.Address)...)
+	oscBuffer = append(oscBuffer, stringToOSCBytes(message.Address)...)
 
 	var sb strings.Builder
 
@@ -100,7 +100,7 @@ func messageToBuffer(message OSCMessage) []byte {
 		sb.WriteString(arg.Type)
 	}
 
-	oscBuffer = append(oscBuffer, stringToBuffer(sb.String())...)
+	oscBuffer = append(oscBuffer, stringToOSCBytes(sb.String())...)
 	oscBuffer = append(oscBuffer, argsToBuffer(message.Args)...)
 
 	return oscBuffer
