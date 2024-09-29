@@ -56,6 +56,23 @@ func floatToOSCBytes(number float32) []byte {
 	return buf.Bytes()
 }
 
+func byteArrayToOSCBytes(bytes []byte) []byte {
+	oscBytes := []byte{}
+
+	bytesSize := len(bytes)
+	oscBytes = append(oscBytes, integerToOSCBytes(int32(bytesSize))...)
+	oscBytes = append(oscBytes, bytes...)
+
+	padLength := 4 - (bytesSize % 4)
+	if padLength < 4 {
+		for i := 0; i < padLength; i++ {
+			oscBytes = append(oscBytes, 0)
+		}
+	}
+
+	return oscBytes
+}
+
 func argsToBuffer(args []OSCArg) []byte {
 	var argBuffers = []byte{}
 
@@ -78,6 +95,12 @@ func argsToBuffer(args []OSCArg) []byte {
 				argBuffers = append(argBuffers, floatToOSCBytes(value)...)
 			} else {
 				fmt.Println("OSC arg had float type but non-float value.")
+			}
+		case "b":
+			if value, ok := arg.Value.([]byte); ok {
+				argBuffers = append(argBuffers, byteArrayToOSCBytes(value)...)
+			} else {
+				fmt.Println("OSC arg had blob type but non-blob value.")
 			}
 		default:
 			fmt.Print("unhandled osc type: ")
@@ -160,6 +183,16 @@ func argToTypedArg(rawArg string, oscType string) OSCArg {
 		return OSCArg{
 			Type:  "f",
 			Value: float32(number),
+		}
+	case "b":
+		data, err := hex.DecodeString(rawArg)
+		if err != nil {
+			// ... handle error
+			panic(err)
+		}
+		return OSCArg{
+			Type:  "b",
+			Value: data,
 		}
 	default:
 		fmt.Print("unhandled osc type: ")
