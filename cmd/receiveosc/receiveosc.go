@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/jwetzell/osc-go/pkg/osc"
+	"github.com/chabad360/go-osc/osc"
 	"github.com/spf13/cobra"
 )
 
@@ -50,7 +50,7 @@ func listen(netAddress string) {
 			panic(err)
 		}
 
-		oscMessage, err := osc.FromBytes(buffer[0:bytesRead])
+		oscMessage, err := osc.NewMessageFromData(buffer[0:bytesRead])
 
 		if err != nil {
 			panic(err)

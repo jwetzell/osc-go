@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/jwetzell/osc-go/pkg/osc"
+	"github.com/chabad360/go-osc/osc"
 
 	"github.com/spf13/cobra"
 )
@@ -31,47 +31,35 @@ func main() {
 	rootCmd.Execute()
 }
 
-func argToTypedArg(rawArg string, oscType string) osc.OSCArg {
+func argToTypedArg(rawArg string, oscType string) any {
 	switch oscType {
 	case "s":
-		return osc.OSCArg{
-			Type:  "s",
-			Value: rawArg,
-		}
+		return rawArg
 	case "i":
 		number, err := strconv.ParseInt(rawArg, 10, 32)
 		if err != nil {
 			// ... handle error
 			panic(err)
 		}
-		return osc.OSCArg{
-			Type:  "i",
-			Value: int32(number),
-		}
+		return int32(number)
 	case "f":
 		number, err := strconv.ParseFloat(rawArg, 32)
 		if err != nil {
 			// ... handle error
 			panic(err)
 		}
-		return osc.OSCArg{
-			Type:  "f",
-			Value: float32(number),
-		}
+		return float32(number)
 	case "b":
 		data, err := hex.DecodeString(rawArg)
 		if err != nil {
 			// ... handle error
 			panic(err)
 		}
-		return osc.OSCArg{
-			Type:  "b",
-			Value: data,
-		}
+		return data
 	default:
 		fmt.Print("unhandled osc type: ")
 		fmt.Printf("%s.\n", oscType)
-		return osc.OSCArg{}
+		return rawArg
 	}
 }
 
@@ -99,7 +87,7 @@ func slipEncode(bytes []byte) []byte {
 
 func make(address string, args []string, types []string, slip bool) {
 
-	oscArgs := []osc.OSCArg{}
+	oscMessage := osc.NewMessage(address)
 
 	for index, arg := range args {
 		oscType := "s"
@@ -107,21 +95,20 @@ func make(address string, args []string, types []string, slip bool) {
 			oscType = types[index]
 		}
 
-		oscArgs = append(oscArgs, argToTypedArg(arg, oscType))
+		oscMessage.Append(argToTypedArg(arg, oscType))
 	}
 
-	oscMessage := osc.OSCMessage{
-		Address: address,
-		Args:    oscArgs,
-	}
+	oscMessageBuffer, err := oscMessage.MarshalBinary()
 
-	oscMessageBuffer := osc.ToBytes(oscMessage)
+	if err != nil {
+		panic(err)
+	}
 
 	if slip {
 		oscMessageBuffer = slipEncode(oscMessageBuffer)
 	}
 
 	//TODO write buffer to stdout
-	os.Stdout.Write(oscMessageBuffer[:])
+	os.Stdout.Write(oscMessageBuffer)
 
 }
