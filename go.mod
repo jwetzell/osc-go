@@ -4,6 +4,7 @@ go 1.23.1
 
 require (
 	github.com/chabad360/go-osc v0.0.0-20220502185613-216f362cdf0a
+	github.com/hypebeast/go-osc v0.0.0-20220308234300-cec5a8a1e5f5
 	github.com/spf13/cobra v1.8.1
 )
 

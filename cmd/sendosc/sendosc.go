@@ -6,7 +6,7 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/chabad360/go-osc/osc"
+	"github.com/hypebeast/go-osc/osc"
 
 	"github.com/spf13/cobra"
 )
