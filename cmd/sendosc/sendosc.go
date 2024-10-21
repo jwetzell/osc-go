@@ -78,6 +78,10 @@ func argToTypedArg(rawArg string, oscType string) any {
 			panic(err)
 		}
 		return float64(number)
+	case "T":
+		return true
+	case "F":
+		return false
 	default:
 		fmt.Print("unhandled osc type: ")
 		fmt.Printf("%s.\n", oscType)
