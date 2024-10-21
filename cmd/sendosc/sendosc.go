@@ -82,6 +82,8 @@ func argToTypedArg(rawArg string, oscType string) any {
 		return true
 	case "F":
 		return false
+	case "N":
+		return nil
 	default:
 		fmt.Print("unhandled osc type: ")
 		fmt.Printf("%s.\n", oscType)
