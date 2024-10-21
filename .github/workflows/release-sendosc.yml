@@ -45,5 +45,5 @@ jobs:
           goversion: "1.23.1"
           project_path: "./cmd/sendosc"
           binary_name: "sendosc"
-          asset_name: ${BINARY_NAME}-${GOOS}-${GOARCH}
-          release_name: ${GITHUB_REF#refs/tags/}
+          asset_name: sendosc-${{ matrix.goos }}-${{ matrix.goarch }}
+          release_name: ${{github.ref_name}}
