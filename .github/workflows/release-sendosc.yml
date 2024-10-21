@@ -26,6 +26,7 @@ jobs:
           draft: false
   release-multi:
     name: create binaries and upload
+    needs: create-release
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -44,4 +45,5 @@ jobs:
           goversion: "1.23.1"
           project_path: "./cmd/sendosc"
           binary_name: "sendosc"
+          asset_name: "${BINARY_NAME}-${GOOS}-${GOARCH}"
           release_tag: ${{ github.ref }}
