@@ -164,26 +164,6 @@ func argsToBuffer(args []OSCArg) []byte {
 	return argBuffers
 }
 
-func ToBytes(message OSCMessage) []byte {
-	//TODO(jwetzell): add error handling
-	oscBuffer := []byte{}
-
-	oscBuffer = append(oscBuffer, stringToOSCBytes(message.Address)...)
-
-	var sb strings.Builder
-
-	sb.WriteString(",")
-
-	for _, arg := range message.Args {
-		sb.WriteString(arg.Type)
-	}
-
-	oscBuffer = append(oscBuffer, stringToOSCBytes(sb.String())...)
-	oscBuffer = append(oscBuffer, argsToBuffer(message.Args)...)
-
-	return oscBuffer
-}
-
 func readOSCString(bytes []byte) (string, []byte) {
 	//TODO(jwetzell): add error handling
 	oscString := ""
@@ -349,33 +329,4 @@ func readOSCArg(bytes []byte, oscType string) (OSCArg, []byte, error) {
 		readArgError = errors.New("unsupported osc type: " + oscType)
 	}
 	return oscArg, remainingBytes, readArgError
-}
-
-func FromBytes(bytes []byte) (OSCMessage, error) {
-	//TODO(jwetzell): add Message and Bundle support
-	address, typeAndArgBytes := readOSCString(bytes)
-
-	oscMessage := OSCMessage{
-		Address: address,
-		Args:    []OSCArg{},
-	}
-
-	typeString, argBytes := readOSCString(typeAndArgBytes)
-
-	for index, oscType := range typeString {
-		if index == 0 {
-			if oscType != ',' {
-				return OSCMessage{}, errors.New("type string is malformed")
-			}
-		} else {
-			oscArg, remainingBytes, error := readOSCArg(argBytes, string(oscType))
-			if error != nil {
-				return oscMessage, error
-			}
-			argBytes = remainingBytes
-			oscMessage.Args = append(oscMessage.Args, oscArg)
-		}
-	}
-
-	return oscMessage, nil
 }

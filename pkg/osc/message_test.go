@@ -9,7 +9,7 @@ import (
 
 // TestHelloName calls greetings.Hello with a name, checking
 // for a valid return value.
-func TestOSCEncoding(t *testing.T) {
+func TestOSCMessageEncoding(t *testing.T) {
 
 	testCases := []struct {
 		description string
@@ -131,7 +131,7 @@ func TestOSCEncoding(t *testing.T) {
 
 	for _, testCase := range testCases {
 
-		actual := ToBytes(testCase.message)
+		actual := MessageToBytes(testCase.message)
 
 		if !reflect.DeepEqual(actual, testCase.expected) {
 			t.Errorf("Test '%s' failed to encode properly", testCase.description)
@@ -142,7 +142,7 @@ func TestOSCEncoding(t *testing.T) {
 
 }
 
-func TestOSCDecoding(t *testing.T) {
+func TestOSCMessageDecoding(t *testing.T) {
 	testCases := []struct {
 		description string
 		bytes       []byte
@@ -265,7 +265,7 @@ func TestOSCDecoding(t *testing.T) {
 
 	for _, testCase := range testCases {
 
-		actual, error := FromBytes(testCase.bytes)
+		actual, error := MessageFromBytes(testCase.bytes)
 
 		if error != nil {
 			fmt.Println(error)
