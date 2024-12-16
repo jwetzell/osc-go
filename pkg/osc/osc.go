@@ -26,7 +26,7 @@ func stringToOSCBytes(rawString string) []byte {
 	return []byte(sb.String())
 }
 
-func integerToOSCBytes(number int32) []byte {
+func int32ToOSCBytes(number int32) []byte {
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, number)
 	if err != nil {
@@ -35,7 +35,25 @@ func integerToOSCBytes(number int32) []byte {
 	return buf.Bytes()
 }
 
-func floatToOSCBytes(number float32) []byte {
+func int64ToOSCBytes(number int64) []byte {
+	var buf bytes.Buffer
+	err := binary.Write(&buf, binary.BigEndian, number)
+	if err != nil {
+		panic(err)
+	}
+	return buf.Bytes()
+}
+
+func float32ToOSCBytes(number float32) []byte {
+	var buf bytes.Buffer
+	err := binary.Write(&buf, binary.BigEndian, number)
+	if err != nil {
+		panic(err)
+	}
+	return buf.Bytes()
+}
+
+func float64ToOSCBytes(number float64) []byte {
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, number)
 	if err != nil {
@@ -48,7 +66,7 @@ func byteArrayToOSCBytes(bytes []byte) []byte {
 	oscBytes := []byte{}
 
 	bytesSize := len(bytes)
-	oscBytes = append(oscBytes, integerToOSCBytes(int32(bytesSize))...)
+	oscBytes = append(oscBytes, int32ToOSCBytes(int32(bytesSize))...)
 	oscBytes = append(oscBytes, bytes...)
 
 	padLength := 4 - (bytesSize % 4)
@@ -75,17 +93,23 @@ func argsToBuffer(args []OSCArg) []byte {
 			}
 		case "i":
 			if value, ok := arg.Value.(int); ok {
-				argBuffers = append(argBuffers, integerToOSCBytes(int32(value))...)
+				argBuffers = append(argBuffers, int32ToOSCBytes(int32(value))...)
 			} else if value, ok := arg.Value.(int32); ok {
-				argBuffers = append(argBuffers, integerToOSCBytes(value)...)
+				argBuffers = append(argBuffers, int32ToOSCBytes(value)...)
 			} else {
 				fmt.Println("OSC arg had integer type but non-integer value.")
 			}
 		case "f":
 			if value, ok := arg.Value.(float32); ok {
-				argBuffers = append(argBuffers, floatToOSCBytes(float32(value))...)
+				argBuffers = append(argBuffers, float32ToOSCBytes(float32(value))...)
 			} else if value, ok := arg.Value.(float64); ok {
-				argBuffers = append(argBuffers, floatToOSCBytes(float32(value))...)
+				argBuffers = append(argBuffers, float32ToOSCBytes(float32(value))...)
+			} else if value, ok := arg.Value.(int); ok {
+				argBuffers = append(argBuffers, float32ToOSCBytes(float32(value))...)
+			} else if value, ok := arg.Value.(int32); ok {
+				argBuffers = append(argBuffers, float32ToOSCBytes(float32(value))...)
+			} else if value, ok := arg.Value.(int64); ok {
+				argBuffers = append(argBuffers, float32ToOSCBytes(float32(value))...)
 			} else {
 				fmt.Println("OSC arg had float type but non-float value.")
 			}
@@ -94,6 +118,44 @@ func argsToBuffer(args []OSCArg) []byte {
 				argBuffers = append(argBuffers, byteArrayToOSCBytes(value)...)
 			} else {
 				fmt.Println("OSC arg had blob type but non-blob value.")
+			}
+		case "T":
+			argBuffers = append(argBuffers, make([]byte, 0)...)
+		case "F":
+			argBuffers = append(argBuffers, make([]byte, 0)...)
+		case "N":
+			argBuffers = append(argBuffers, make([]byte, 0)...)
+		case "I":
+			argBuffers = append(argBuffers, make([]byte, 0)...)
+		case "r":
+			color, ok := arg.Value.(OSCColor)
+			if ok {
+				colorBytes := []byte{color.r, color.g, color.b, color.a}
+				argBuffers = append(argBuffers, colorBytes...)
+			}
+		case "h":
+			if value, ok := arg.Value.(int); ok {
+				argBuffers = append(argBuffers, int64ToOSCBytes(int64(value))...)
+			} else if value, ok := arg.Value.(int32); ok {
+				argBuffers = append(argBuffers, int64ToOSCBytes(int64(value))...)
+			} else if value, ok := arg.Value.(int64); ok {
+				argBuffers = append(argBuffers, int64ToOSCBytes(value)...)
+			} else {
+				fmt.Println("OSC arg had integer type but non-integer value.")
+			}
+		case "d":
+			if value, ok := arg.Value.(float32); ok {
+				argBuffers = append(argBuffers, float64ToOSCBytes(float64(value))...)
+			} else if value, ok := arg.Value.(float64); ok {
+				argBuffers = append(argBuffers, float64ToOSCBytes(float64(value))...)
+			} else if value, ok := arg.Value.(int); ok {
+				argBuffers = append(argBuffers, float64ToOSCBytes(float64(value))...)
+			} else if value, ok := arg.Value.(int32); ok {
+				argBuffers = append(argBuffers, float64ToOSCBytes(float64(value))...)
+			} else if value, ok := arg.Value.(int64); ok {
+				argBuffers = append(argBuffers, float64ToOSCBytes(float64(value))...)
+			} else {
+				fmt.Println("OSC arg had float type but non-float value.")
 			}
 		default:
 			fmt.Printf("unhandled osc type: %s.\n", oscType)
