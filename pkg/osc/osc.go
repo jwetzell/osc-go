@@ -10,16 +10,6 @@ import (
 	"strings"
 )
 
-type OSCArg struct {
-	Type  string
-	Value any
-}
-
-type OSCMessage struct {
-	Address string
-	Args    []OSCArg
-}
-
 func stringToOSCBytes(rawString string) []byte {
 	var sb strings.Builder
 
