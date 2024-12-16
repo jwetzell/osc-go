@@ -212,7 +212,7 @@ func readOSCString(bytes []byte) (string, []byte) {
 	return oscString, remainingBytes
 }
 
-func readOSCInt(bytes []byte) (int32, []byte, error) {
+func readOSCInt32(bytes []byte) (int32, []byte, error) {
 	if len(bytes) < 4 {
 		return 0, bytes, errors.New("int data must be at least 4 bytes large")
 	}
@@ -220,7 +220,15 @@ func readOSCInt(bytes []byte) (int32, []byte, error) {
 	return int32(bits), bytes[4:], nil
 }
 
-func readOSCFloat(bytes []byte) (float32, []byte, error) {
+func readOSCInt64(bytes []byte) (int64, []byte, error) {
+	if len(bytes) < 8 {
+		return 0, bytes, errors.New("int data must be at least 4 bytes large")
+	}
+	bits := binary.BigEndian.Uint64(bytes[0:8])
+	return int64(bits), bytes[8:], nil
+}
+
+func readOSCFloat32(bytes []byte) (float32, []byte, error) {
 	if len(bytes) < 4 {
 		return 0, bytes, errors.New("float data must be at least 4 bytes large")
 	}
@@ -228,8 +236,16 @@ func readOSCFloat(bytes []byte) (float32, []byte, error) {
 	return math.Float32frombits(bits), bytes[4:], nil
 }
 
+func readOSCFloat64(bytes []byte) (float64, []byte, error) {
+	if len(bytes) < 4 {
+		return 0, bytes, errors.New("float data must be at least 4 bytes large")
+	}
+	bits := binary.BigEndian.Uint64(bytes[0:8])
+	return math.Float64frombits(bits), bytes[8:], nil
+}
+
 func readOSCBlob(bytes []byte) ([]byte, []byte, error) {
-	blobLength, remainingBytes, err := readOSCInt(bytes)
+	blobLength, remainingBytes, err := readOSCInt32(bytes)
 
 	if err != nil {
 		return []byte{}, bytes, errors.New("problem reading blob data size")
@@ -248,6 +264,19 @@ func readOSCBlob(bytes []byte) ([]byte, []byte, error) {
 	return bytes[4 : 4+blobLength], bytes[blobEnd:], nil
 }
 
+func readOSCColor(bytes []byte) (OSCColor, []byte, error) {
+	if len(bytes) < 4 {
+		return OSCColor{0, 0, 0, 0}, bytes, errors.New("color data must be at least 4 bytes large")
+	}
+	oscColor := OSCColor{
+		r: bytes[0],
+		g: bytes[1],
+		b: bytes[2],
+		a: bytes[3],
+	}
+	return oscColor, bytes[4:], nil
+}
+
 func readOSCArg(bytes []byte, oscType string) (OSCArg, []byte, error) {
 	var readArgError error
 
@@ -262,14 +291,14 @@ func readOSCArg(bytes []byte, oscType string) (OSCArg, []byte, error) {
 		oscArg.Value = argString
 		remainingBytes = bytesLeft
 	case "i":
-		argInt, bytesLeft, error := readOSCInt(bytes)
+		argInt, bytesLeft, error := readOSCInt32(bytes)
 		if error != nil {
 			readArgError = error
 		}
 		oscArg.Value = argInt
 		remainingBytes = bytesLeft
 	case "f":
-		argFloat, bytesLeft, error := readOSCFloat(bytes)
+		argFloat, bytesLeft, error := readOSCFloat32(bytes)
 		if error != nil {
 			readArgError = error
 		}
@@ -281,6 +310,39 @@ func readOSCArg(bytes []byte, oscType string) (OSCArg, []byte, error) {
 			readArgError = error
 		}
 		oscArg.Value = argBytes
+		remainingBytes = bytesLeft
+	case "T":
+		oscArg.Value = true
+		remainingBytes = bytes
+	case "F":
+		oscArg.Value = false
+		remainingBytes = bytes
+	case "N":
+		oscArg.Value = nil
+		remainingBytes = bytes
+	case "I":
+		oscArg.Value = math.MaxInt32
+		remainingBytes = bytes
+	case "r":
+		argColor, bytesLeft, error := readOSCColor(bytes)
+		if error != nil {
+			readArgError = error
+		}
+		oscArg.Value = argColor
+		remainingBytes = bytesLeft
+	case "h":
+		argInt, bytesLeft, error := readOSCInt64(bytes)
+		if error != nil {
+			readArgError = error
+		}
+		oscArg.Value = argInt
+		remainingBytes = bytesLeft
+	case "d":
+		argFloat, bytesLeft, error := readOSCFloat64(bytes)
+		if error != nil {
+			readArgError = error
+		}
+		oscArg.Value = argFloat
 		remainingBytes = bytesLeft
 	default:
 		fmt.Printf("unsupported osc type: %s\n", oscType)
