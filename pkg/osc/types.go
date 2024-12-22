@@ -1,5 +1,10 @@
 package osc
 
+type OSCPacket interface {
+	ToBytes() []byte
+}
+
+
 type OSCArg struct {
 	Type  string
 	Value any

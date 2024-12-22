@@ -131,7 +131,7 @@ func TestOSCMessageEncoding(t *testing.T) {
 
 	for _, testCase := range testCases {
 
-		actual := MessageToBytes(testCase.message)
+		actual := testCase.message.ToBytes()
 
 		if !reflect.DeepEqual(actual, testCase.expected) {
 			t.Errorf("Test '%s' failed to encode properly", testCase.description)

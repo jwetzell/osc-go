@@ -5,22 +5,22 @@ import (
 	"strings"
 )
 
-func MessageToBytes(message OSCMessage) []byte {
+func (m *OSCMessage) ToBytes() []byte {
 	//TODO(jwetzell): add error handling
 	oscBuffer := []byte{}
 
-	oscBuffer = append(oscBuffer, stringToOSCBytes(message.Address)...)
+	oscBuffer = append(oscBuffer, stringToOSCBytes(m.Address)...)
 
 	var sb strings.Builder
 
 	sb.WriteString(",")
 
-	for _, arg := range message.Args {
+	for _, arg := range m.Args {
 		sb.WriteString(arg.Type)
 	}
 
 	oscBuffer = append(oscBuffer, stringToOSCBytes(sb.String())...)
-	oscBuffer = append(oscBuffer, argsToBuffer(message.Args)...)
+	oscBuffer = append(oscBuffer, argsToBuffer(m.Args)...)
 
 	return oscBuffer
 }
