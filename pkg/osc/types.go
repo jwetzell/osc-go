@@ -4,6 +4,10 @@ type OSCPacket interface {
 	ToBytes() []byte
 }
 
+type OSCBundle struct {
+	TimeTag  uint64
+	Contents []OSCPacket
+}
 
 type OSCArg struct {
 	Type  string
