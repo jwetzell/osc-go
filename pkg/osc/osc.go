@@ -79,6 +79,13 @@ func byteArrayToOSCBytes(bytes []byte) []byte {
 	return oscBytes
 }
 
+func timeTagToOSCBytes(timeTag OSCTimeTag) []byte {
+	timeTagBytes := int32ToOSCBytes(timeTag.seconds)
+	timeTagBytes = append(timeTagBytes, int32ToOSCBytes(timeTag.fractionalSeconds)...)
+
+	return timeTagBytes
+}
+
 func argsToBuffer(args []OSCArg) []byte {
 	//TODO(jwetzell): add error handling
 	var argBuffers = []byte{}
@@ -255,6 +262,23 @@ func readOSCColor(bytes []byte) (OSCColor, []byte, error) {
 		a: bytes[3],
 	}
 	return oscColor, bytes[4:], nil
+}
+func readOSCTimeTag(bytes []byte) (OSCTimeTag, []byte, error) {
+	seconds, bytesAfterSeconds, err := readOSCInt32(bytes)
+	if err != nil {
+		return OSCTimeTag{}, bytes, err
+	}
+	fractionalSeconds, remainingBytes, err := readOSCInt32(bytesAfterSeconds)
+	if err != nil {
+		return OSCTimeTag{}, bytes, err
+	}
+
+	return OSCTimeTag{
+			seconds:           seconds,
+			fractionalSeconds: fractionalSeconds,
+		},
+		remainingBytes,
+		nil
 }
 
 func readOSCArg(bytes []byte, oscType string) (OSCArg, []byte, error) {

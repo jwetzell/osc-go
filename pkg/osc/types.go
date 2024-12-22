@@ -5,7 +5,7 @@ type OSCPacket interface {
 }
 
 type OSCBundle struct {
-	TimeTag  uint64
+	TimeTag  OSCTimeTag
 	Contents []OSCPacket
 }
 
@@ -24,4 +24,9 @@ type OSCColor struct {
 	g uint8
 	b uint8
 	a uint8
+}
+
+type OSCTimeTag struct {
+	seconds           int32
+	fractionalSeconds int32
 }
