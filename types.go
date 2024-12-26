@@ -5,13 +5,13 @@ type OSCPacket interface {
 }
 
 type OSCBundle struct {
-	TimeTag  OSCTimeTag
 	Contents []OSCPacket
+	TimeTag  OSCTimeTag
 }
 
 type OSCArg struct {
-	Type  string
 	Value any
+	Type  string
 }
 
 type OSCMessage struct {
