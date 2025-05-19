@@ -126,7 +126,7 @@ func slipEncode(bytes []byte) []byte {
 	ESC_END := byte(0xdc)
 	ESC_ESC := byte(0xdd)
 
-	var encodedBytes = []byte{}
+	var encodedBytes = []byte{END}
 
 	for _, byteToEncode := range bytes {
 		if byteToEncode == END {
