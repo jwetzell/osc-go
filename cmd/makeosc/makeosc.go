@@ -17,7 +17,7 @@ func main() {
 	var Slip bool
 
 	var rootCmd = &cobra.Command{
-		Use: "sendosc",
+		Use: "makeosc",
 		Run: func(cmd *cobra.Command, args []string) {
 			make(Address, Args, Types, Slip)
 		},
