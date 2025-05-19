@@ -14,7 +14,7 @@ func main() {
 	var Protocol string
 
 	var rootCmd = &cobra.Command{
-		Use: "sendosc",
+		Use: "receiveosc",
 		Run: func(cmd *cobra.Command, args []string) {
 			netAddress := Host + ":" + Port
 			if Protocol == "udp" {
