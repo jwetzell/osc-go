@@ -6,8 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/hypebeast/go-osc/osc"
-
+	osc "github.com/jwetzell/osc-go"
 	"github.com/spf13/cobra"
 )
 
@@ -31,55 +30,84 @@ func main() {
 	rootCmd.Execute()
 }
 
-func argToTypedArg(rawArg string, oscType string) any {
+func argToTypedArg(rawArg string, oscType string) osc.OSCArg {
+
 	switch oscType {
 	case "s":
-		return rawArg
+		return osc.OSCArg{
+			Value: rawArg,
+			Type:  "s",
+		}
 	case "i":
 		number, err := strconv.ParseInt(rawArg, 10, 32)
 		if err != nil {
 			// ... handle error
 			panic(err)
 		}
-		return int32(number)
+		return osc.OSCArg{
+			Value: int32(number),
+			Type:  "i",
+		}
 	case "f":
 		number, err := strconv.ParseFloat(rawArg, 32)
 		if err != nil {
 			// ... handle error
 			panic(err)
 		}
-		return float32(number)
+		return osc.OSCArg{
+			Value: float32(number),
+			Type:  "f",
+		}
 	case "b":
 		data, err := hex.DecodeString(rawArg)
 		if err != nil {
 			// ... handle error
 			panic(err)
 		}
-		return data
+		return osc.OSCArg{
+			Value: data,
+			Type:  "b",
+		}
 	case "h":
 		number, err := strconv.ParseInt(rawArg, 10, 64)
 		if err != nil {
 			// ... handle error
 			panic(err)
 		}
-		return int64(number)
+		return osc.OSCArg{
+			Value: int64(number),
+			Type:  "h",
+		}
 	case "d":
 		number, err := strconv.ParseFloat(rawArg, 64)
 		if err != nil {
 			// ... handle error
 			panic(err)
 		}
-		return float64(number)
+		return osc.OSCArg{
+			Value: float64(number),
+			Type:  "d",
+		}
 	case "T":
-		return true
+		return osc.OSCArg{
+			Value: true,
+			Type:  "T",
+		}
 	case "F":
-		return false
+		return osc.OSCArg{
+			Value: false,
+			Type:  "F",
+		}
 	case "N":
-		return nil
+		return osc.OSCArg{
+			Value: nil,
+			Type:  "N",
+		}
 	default:
 		fmt.Print("unhandled osc type: ")
 		fmt.Printf("%s.\n", oscType)
-		return rawArg
+		// TODO(jwetzell): something better than this like actual nil, err thing
+		return osc.OSCArg{}
 	}
 }
 
@@ -107,7 +135,10 @@ func slipEncode(bytes []byte) []byte {
 
 func make(address string, args []string, types []string, slip bool) {
 
-	oscMessage := osc.NewMessage(address)
+	oscMessage := osc.OSCMessage{
+		Address: address,
+		Args:    []osc.OSCArg{},
+	}
 
 	for index, arg := range args {
 		oscType := "s"
@@ -115,14 +146,10 @@ func make(address string, args []string, types []string, slip bool) {
 			oscType = types[index]
 		}
 
-		oscMessage.Append(argToTypedArg(arg, oscType))
+		oscMessage.Args = append(oscMessage.Args, argToTypedArg(arg, oscType))
 	}
 
-	oscMessageBuffer, err := oscMessage.MarshalBinary()
-
-	if err != nil {
-		panic(err)
-	}
+	oscMessageBuffer := oscMessage.ToBytes()
 
 	if slip {
 		oscMessageBuffer = slipEncode(oscMessageBuffer)

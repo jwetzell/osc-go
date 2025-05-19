@@ -1,8 +1,4 @@
-github.com/chabad360/go-osc v0.0.0-20220502185613-216f362cdf0a h1:MTor/GgULww+hISVbeiNuC5vyT1mc2xa6/14ib0lvyc=
-github.com/chabad360/go-osc v0.0.0-20220502185613-216f362cdf0a/go.mod h1:/aAn5LNn+s7zq33XItIcYLr6aOntVkWckHPAG40yeUc=
 github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
-github.com/hypebeast/go-osc v0.0.0-20220308234300-cec5a8a1e5f5 h1:fqwINudmUrvGCuw+e3tedZ2UJ0hklSw6t8UPomctKyQ=
-github.com/hypebeast/go-osc v0.0.0-20220308234300-cec5a8a1e5f5/go.mod h1:lqMjoCs0y0GoRRujSPZRBaGb4c5ER6TfkFKSClxkMbY=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
