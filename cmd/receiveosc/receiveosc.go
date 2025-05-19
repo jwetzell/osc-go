@@ -78,7 +78,10 @@ func (s *SLIP) decode(bytes []byte) {
 			}
 			escapeNext = false
 		} else if packetByte == END {
-			if len(s.pendingBytes) > 0 {
+			if len(s.pendingBytes) == 0 {
+				// opening END byte, can discard
+				continue
+			} else {
 				message, err := osc.MessageFromBytes(s.pendingBytes)
 				if err != nil {
 					fmt.Println(err)
