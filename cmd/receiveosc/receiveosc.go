@@ -1,33 +1,63 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
+	"os"
 
 	osc "github.com/jwetzell/osc-go"
-	"github.com/spf13/cobra"
+	"github.com/urfave/cli/v3"
 )
 
 func main() {
 	var Host string
-	var Port string
+	var Port int32
 	var Protocol string
 
-	var rootCmd = &cobra.Command{
-		Use: "receiveosc",
-		Run: func(cmd *cobra.Command, args []string) {
-			netAddress := Host + ":" + Port
+	cmd := &cli.Command{
+		Name:  "makeosc",
+		Usage: "make osc bytes",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:        "host",
+				Usage:       "host to send OSC message to",
+				Value:       "127.0.0.1",
+				Destination: &Host,
+			},
+			&cli.Int32Flag{
+				Name:        "port",
+				Usage:       "port to send OSC message to",
+				Destination: &Port,
+				Value:       8888,
+			},
+			&cli.StringFlag{
+				Name:        "protocol",
+				Usage:       "protocol to use to send (tcp or udp)",
+				Value:       "udp",
+				Destination: &Protocol,
+				Validator: func(flag string) error {
+					if flag != "udp" && flag != "tcp" {
+						return fmt.Errorf("protocol must be either 'udp' or 'tcp'")
+					}
+					return nil
+				},
+			},
+		},
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			netAddress := fmt.Sprintf("%s:%d", Host, Port)
 			if Protocol == "udp" {
 				listenUDP(netAddress)
 			} else if Protocol == "tcp" {
 				listenTCP(netAddress)
 			}
+			return nil
 		},
 	}
-	rootCmd.Flags().StringVar(&Host, "host", "127.0.0.1", "host to send OSC message to")
-	rootCmd.Flags().StringVar(&Port, "port", "8888", "port to send OSC message to")
-	rootCmd.Flags().StringVar(&Protocol, "protocol", "udp", "protocol to use to send (tcp or udp)")
-	rootCmd.Execute()
+
+	if err := cmd.Run(context.Background(), os.Args); err != nil {
+		panic(err)
+	}
 }
 
 func listenTCP(netAddress string) {
