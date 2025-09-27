@@ -1,13 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"os"
 	"strconv"
 
 	osc "github.com/jwetzell/osc-go"
-	"github.com/spf13/cobra"
+	"github.com/urfave/cli/v3"
 )
 
 func main() {
@@ -16,18 +17,43 @@ func main() {
 	var Types []string
 	var Slip bool
 
-	var rootCmd = &cobra.Command{
-		Use: "makeosc",
-		Run: func(cmd *cobra.Command, args []string) {
+	cmd := &cli.Command{
+		Name:  "makeosc",
+		Usage: "make osc bytes",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:        "address",
+				Value:       "",
+				Usage:       "OSC address",
+				Destination: &Address,
+				Required:    true,
+			},
+			&cli.StringSliceFlag{
+				Name:        "arg",
+				Usage:       "OSC args",
+				Destination: &Args,
+			},
+			&cli.StringSliceFlag{
+				Name:        "type",
+				Usage:       "OSC types",
+				Destination: &Types,
+			},
+			&cli.BoolFlag{
+				Name:        "slip",
+				Value:       false,
+				Usage:       "whether to slip encode the OSC Message bytes",
+				Destination: &Slip,
+			},
+		},
+		Action: func(ctx context.Context, cmd *cli.Command) error {
 			make(Address, Args, Types, Slip)
+			return nil
 		},
 	}
-	rootCmd.Flags().StringVar(&Address, "address", "", "OSC address")
-	rootCmd.Flags().StringArrayVar(&Args, "arg", []string{}, "OSC args")
-	rootCmd.Flags().StringArrayVar(&Types, "type", []string{}, "OSC types")
-	rootCmd.Flags().BoolVar(&Slip, "slip", false, "whether to slip encode the OSC Message bytes")
-	rootCmd.MarkFlagRequired("address")
-	rootCmd.Execute()
+
+	if err := cmd.Run(context.Background(), os.Args); err != nil {
+		panic(err)
+	}
 }
 
 func argToTypedArg(rawArg string, oscType string) osc.OSCArg {
