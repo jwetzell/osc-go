@@ -1,4 +1,4 @@
-name: "release go binaries for multiple os/arch"
+name: "release go binaries for sendosc"
 
 on:
   push:
