@@ -42,7 +42,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
-          goversion: "1.23.1"
+          goversion: "1.25.1"
           project_path: "./cmd/makeosc"
           binary_name: "makeosc"
           asset_name: makeosc-${{ matrix.goos }}-${{ matrix.goarch }}
