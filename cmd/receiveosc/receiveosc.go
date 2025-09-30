@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -14,6 +15,7 @@ func main() {
 	var Host string
 	var Port int32
 	var Protocol string
+	var Format string
 
 	cmd := &cli.Command{
 		Name:  "makeosc",
@@ -43,13 +45,25 @@ func main() {
 					return nil
 				},
 			},
+			&cli.StringFlag{
+				Name:        "format",
+				Usage:       "format for messages to be output in ('json')",
+				Value:       "json",
+				Destination: &Format,
+				Validator: func(flag string) error {
+					if flag != "json" {
+						return fmt.Errorf("format must be 'json'")
+					}
+					return nil
+				},
+			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			netAddress := fmt.Sprintf("%s:%d", Host, Port)
 			if Protocol == "udp" {
-				listenUDP(netAddress)
+				listenUDP(netAddress, Format)
 			} else if Protocol == "tcp" {
-				listenTCP(netAddress)
+				listenTCP(netAddress, Format)
 			}
 			return nil
 		},
@@ -60,7 +74,7 @@ func main() {
 	}
 }
 
-func listenTCP(netAddress string) {
+func listenTCP(netAddress string, format string) {
 	socket, err := net.Listen("tcp4", netAddress)
 	if err != nil {
 		fmt.Println(err)
@@ -69,15 +83,13 @@ func listenTCP(netAddress string) {
 
 	defer socket.Close()
 
-	fmt.Printf("listening on %s (tcp w/ SLIP)\n", netAddress)
-
 	for {
 		conn, err := socket.Accept()
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
-		go handleConnection(conn)
+		go handleConnection(conn, format)
 	}
 }
 
@@ -127,18 +139,18 @@ func (s *SLIP) decode(bytes []byte) {
 
 }
 
-func handleMessages(slip SLIP) {
+func handleSLIP(slip SLIP, format string) {
 	for message := range slip.Messages {
-		fmt.Printf("%v\n", message)
+		handleMessage(message, format)
 	}
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn, format string) {
 	slip := SLIP{
 		pendingBytes: []byte{},
 		Messages:     make(chan osc.OSCMessage),
 	}
-	go handleMessages(slip)
+	go handleSLIP(slip, format)
 
 	defer conn.Close()
 	buffer := make([]byte, 1024)
@@ -154,7 +166,16 @@ func handleConnection(conn net.Conn) {
 	}
 }
 
-func listenUDP(netAddress string) {
+func handleMessage(message osc.OSCMessage, format string) {
+	if format == "json" {
+		jsonData, _ := json.Marshal(message)
+		fmt.Println(string(jsonData))
+	} else {
+		fmt.Printf("%v\n", message)
+	}
+}
+
+func listenUDP(netAddress string, format string) {
 
 	s, err := net.ResolveUDPAddr("udp4", netAddress)
 	if err != nil {
@@ -167,8 +188,6 @@ func listenUDP(netAddress string) {
 		fmt.Println(err)
 		return
 	}
-
-	fmt.Printf("listening on %s (udp)\n", netAddress)
 
 	defer connection.Close()
 	buffer := make([]byte, 1024)
@@ -185,6 +204,6 @@ func listenUDP(netAddress string) {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(oscMessage)
+		handleMessage(oscMessage, format)
 	}
 }
