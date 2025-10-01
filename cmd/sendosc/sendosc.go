@@ -23,8 +23,8 @@ func main() {
 	var Slip bool
 
 	cmd := &cli.Command{
-		Name:  "makeosc",
-		Usage: "make osc bytes",
+		Name:  "sendosc",
+		Usage: "send OSC messages via UDP or TCP",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "host",

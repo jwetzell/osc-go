@@ -18,8 +18,8 @@ func main() {
 	var Format string
 
 	cmd := &cli.Command{
-		Name:  "makeosc",
-		Usage: "make osc bytes",
+		Name:  "receiveosc",
+		Usage: "receive OSC messages via UDP or TCP",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "host",
