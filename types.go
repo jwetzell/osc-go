@@ -5,18 +5,18 @@ type OSCPacket interface {
 }
 
 type OSCBundle struct {
-	Contents []OSCPacket
-	TimeTag  OSCTimeTag
+	Contents []OSCPacket `json:"contents"`
+	TimeTag  OSCTimeTag  `json:"timeTag"`
 }
 
 type OSCArg struct {
-	Value any
-	Type  string
+	Value any    `json:"value"`
+	Type  string `json:"type"`
 }
 
 type OSCMessage struct {
-	Address string
-	Args    []OSCArg
+	Address string   `json:"address"`
+	Args    []OSCArg `json:"args"`
 }
 
 type OSCColor struct {
