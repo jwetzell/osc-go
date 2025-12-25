@@ -177,9 +177,9 @@ func slipEncode(bytes []byte) []byte {
 
 	for _, byteToEncode := range bytes {
 		if byteToEncode == END {
-			encodedBytes = append(encodedBytes, ESC_END)
+			encodedBytes = append(encodedBytes, ESC, ESC_END)
 		} else if byteToEncode == ESC {
-			encodedBytes = append(encodedBytes, ESC_ESC)
+			encodedBytes = append(encodedBytes, ESC, ESC_ESC)
 		} else {
 			encodedBytes = append(encodedBytes, byteToEncode)
 		}
