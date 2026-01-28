@@ -26,6 +26,10 @@ func (m *OSCMessage) ToBytes() []byte {
 }
 
 func MessageFromBytes(bytes []byte) (OSCMessage, error) {
+	if len(bytes) == 0 {
+		return OSCMessage{}, errors.New("cannot create OSC Message from empty byte array")
+	}
+
 	address, typeAndArgBytes := readOSCString(bytes)
 
 	if address[0] != 47 {
