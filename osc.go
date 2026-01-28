@@ -174,17 +174,13 @@ func argsToBuffer(args []OSCArg) []byte {
 func readOSCString(bytes []byte) (string, []byte) {
 	//TODO(jwetzell): add error handling
 	oscString := ""
-	stringFinished := false
 	stringEndIndex := 0
-	remainingBytes := []byte{}
 
 	for index, byteIn := range bytes {
-		if !stringFinished {
-			if byteIn == 0 {
-				oscString = string(bytes[0:index])
-				stringEndIndex = index + 1
-				break
-			}
+		if byteIn == 0 {
+			oscString = string(bytes[0:index])
+			stringEndIndex = index + 1
+			break
 		}
 	}
 
@@ -194,7 +190,7 @@ func readOSCString(bytes []byte) (string, []byte) {
 		stringEndIndex = stringEndIndex + stringPadding
 	}
 
-	remainingBytes = bytes[stringEndIndex:]
+	remainingBytes := bytes[stringEndIndex:]
 
 	return oscString, remainingBytes
 }
