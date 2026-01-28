@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"net"
@@ -211,6 +212,12 @@ func send(host string, port int32, address string, args []string, types []string
 
 	if slip {
 		oscMessageBuffer = slipEncode(oscMessageBuffer)
+	} else if protocol == "tcp" {
+		// OSC 1.0 prepends a 4 byte size header for non-SLIP TCP messages
+		size := uint32(len(oscMessageBuffer))
+		sizeBytes := make([]byte, 4)
+		binary.BigEndian.PutUint32(sizeBytes, size)
+		oscMessageBuffer = append(sizeBytes, oscMessageBuffer...)
 	}
 
 	netAddress := fmt.Sprintf("%s:%d", host, port)
