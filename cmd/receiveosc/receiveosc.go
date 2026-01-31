@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	var Host string
+	var IP string
 	var Port int32
 	var Protocol string
 	var Format string
@@ -26,7 +26,7 @@ func main() {
 				Name:        "ip",
 				Usage:       "ip to receive OSC messages on",
 				Value:       "0.0.0.0",
-				Destination: &Host,
+				Destination: &IP,
 			},
 			&cli.Int32Flag{
 				Name:        "port",
@@ -66,7 +66,7 @@ func main() {
 			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			netAddress := fmt.Sprintf("%s:%d", Host, Port)
+			netAddress := fmt.Sprintf("%s:%d", IP, Port)
 			switch Protocol {
 			case "udp":
 				listenUDP(netAddress, Format)
