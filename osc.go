@@ -356,19 +356,20 @@ func PacketFromBytes(bytes []byte) (OSCPacket, []byte, error) {
 		return nil, bytes, errors.New("cannot create OSC Packet from empty byte array")
 	}
 
-	if bytes[0] == '#' {
+	switch bytes[0] {
+	case '#':
 		bundle, remainingBytes, err := BundleFromBytes(bytes)
 		if err != nil {
 			return nil, bytes, err
 		}
 		return bundle, remainingBytes, nil
-	} else if bytes[0] == '/' {
+	case '/':
 		message, err := MessageFromBytes(bytes)
 		if err != nil {
 			return nil, bytes, err
 		}
 		return message, []byte{}, nil
-	} else {
+	default:
 		return nil, bytes, errors.New("OSC Packet must start with # for bundle or / for message")
 	}
 }
