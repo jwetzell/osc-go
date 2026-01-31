@@ -10,12 +10,12 @@ func TestOSCBundleEncoding(t *testing.T) {
 
 	testCases := []struct {
 		description string
-		bundle      OSCBundle
+		bundle      *OSCBundle
 		expected    []byte
 	}{
 		{
 			"simple contents single message",
-			OSCBundle{
+			&OSCBundle{
 				TimeTag: OSCTimeTag{
 					seconds:           32,
 					fractionalSeconds: 0,
@@ -46,12 +46,12 @@ func TestOSCBundleEncoding(t *testing.T) {
 func TestOSCBundleDecoding(t *testing.T) {
 	testCases := []struct {
 		description string
-		expected    OSCBundle
+		expected    *OSCBundle
 		bytes       []byte
 	}{
 		{
 			"simple contents single message",
-			OSCBundle{
+			&OSCBundle{
 				TimeTag: OSCTimeTag{
 					seconds:           32,
 					fractionalSeconds: 0,
