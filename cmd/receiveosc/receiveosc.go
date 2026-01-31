@@ -16,26 +16,27 @@ func main() {
 	var Port int32
 	var Protocol string
 	var Format string
+	var Slip bool
 
 	cmd := &cli.Command{
 		Name:  "receiveosc",
 		Usage: "receive OSC messages via UDP or TCP",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:        "host",
-				Usage:       "host to send OSC message to",
-				Value:       "127.0.0.1",
+				Name:        "ip",
+				Usage:       "ip to receive OSC messages on",
+				Value:       "0.0.0.0",
 				Destination: &Host,
 			},
 			&cli.Int32Flag{
 				Name:        "port",
-				Usage:       "port to send OSC message to",
+				Usage:       "port to receive OSC messages on",
 				Destination: &Port,
 				Value:       8888,
 			},
 			&cli.StringFlag{
 				Name:        "protocol",
-				Usage:       "protocol to use to send (tcp or udp)",
+				Usage:       "protocol to use to receive (tcp or udp)",
 				Value:       "udp",
 				Destination: &Protocol,
 				Validator: func(flag string) error {
@@ -57,13 +58,23 @@ func main() {
 					return nil
 				},
 			},
+			&cli.BoolFlag{
+				Name:        "slip",
+				Value:       false,
+				Usage:       "whether to slip encode the OSC Message bytes",
+				Destination: &Slip,
+			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			netAddress := fmt.Sprintf("%s:%d", Host, Port)
-			if Protocol == "udp" {
+			switch Protocol {
+			case "udp":
 				listenUDP(netAddress, Format)
-			} else if Protocol == "tcp" {
-				listenTCP(netAddress, Format)
+			case "tcp":
+				if !Slip {
+					return fmt.Errorf("OSC 1.0 over TCP is not supported yet")
+				}
+				listenTCP(netAddress, Slip, Format)
 			}
 			return nil
 		},
@@ -74,7 +85,7 @@ func main() {
 	}
 }
 
-func listenTCP(netAddress string, format string) {
+func listenTCP(netAddress string, useSLIP bool, format string) {
 	socket, err := net.Listen("tcp4", netAddress)
 	if err != nil {
 		fmt.Println(err)
@@ -89,13 +100,13 @@ func listenTCP(netAddress string, format string) {
 			fmt.Println(err)
 			continue
 		}
-		go handleConnection(conn, format)
+		go handleTCPConnection(conn, useSLIP, format)
 	}
 }
 
 type SLIP struct {
 	pendingBytes []byte
-	Messages     chan osc.OSCMessage
+	Packets      chan osc.OSCPacket
 }
 
 func (s *SLIP) decode(bytes []byte) {
@@ -121,14 +132,14 @@ func (s *SLIP) decode(bytes []byte) {
 			escapeNext = false
 		} else if packetByte == END {
 			if len(s.pendingBytes) == 0 {
-				// opening END byte, can discard
+				// probably opening END byte, can discard
 				continue
 			} else {
-				message, err := osc.MessageFromBytes(s.pendingBytes)
+				oscPacket, _, err := osc.PacketFromBytes(s.pendingBytes)
 				if err != nil {
-					fmt.Println(err)
+					panic(err)
 				} else {
-					s.Messages <- message
+					s.Packets <- oscPacket
 				}
 			}
 			s.pendingBytes = []byte{}
@@ -136,19 +147,18 @@ func (s *SLIP) decode(bytes []byte) {
 			s.pendingBytes = append(s.pendingBytes, packetByte)
 		}
 	}
-
 }
 
 func handleSLIP(slip SLIP, format string) {
-	for message := range slip.Messages {
-		handleMessage(message, format)
+	for message := range slip.Packets {
+		handlePacket(message, format)
 	}
 }
 
-func handleConnection(conn net.Conn, format string) {
+func handleTCPConnection(conn net.Conn, useSLIP bool, format string) {
 	slip := SLIP{
 		pendingBytes: []byte{},
-		Messages:     make(chan osc.OSCMessage),
+		Packets:      make(chan osc.OSCPacket),
 	}
 	go handleSLIP(slip, format)
 
@@ -161,17 +171,37 @@ func handleConnection(conn net.Conn, format string) {
 		if err != nil {
 			return
 		}
+		if useSLIP {
+			slip.decode(buffer[0:bytesRead])
+		} else {
+			// TODO(jwetzell): handle non-SLIP TCP messages properly
+		}
 
-		slip.decode(buffer[0:bytesRead])
 	}
 }
 
-func handleMessage(message osc.OSCMessage, format string) {
+func handlePacket(message osc.OSCPacket, format string) {
+	if bundle, ok := message.(*osc.OSCBundle); ok {
+		handleBundle(bundle, format)
+	} else if msg, ok := message.(*osc.OSCMessage); ok {
+		handleMessage(msg, format)
+	} else {
+		fmt.Println("Received unknown OSC Packet type")
+	}
+}
+
+func handleMessage(message *osc.OSCMessage, format string) {
 	if format == "json" {
 		jsonData, _ := json.Marshal(message)
 		fmt.Println(string(jsonData))
 	} else {
 		fmt.Printf("%v\n", message)
+	}
+}
+
+func handleBundle(bundle *osc.OSCBundle, format string) {
+	for _, packet := range bundle.Contents {
+		handlePacket(packet, format)
 	}
 }
 
@@ -199,11 +229,13 @@ func listenUDP(netAddress string, format string) {
 			panic(err)
 		}
 
-		oscMessage, err := osc.MessageFromBytes(buffer[0:bytesRead])
+		fmt.Println("Received UDP packet")
+		fmt.Println(buffer[0:bytesRead])
+		oscPacket, _, err := osc.PacketFromBytes(buffer[0:bytesRead])
 
 		if err != nil {
 			panic(err)
 		}
-		handleMessage(oscMessage, format)
+		handlePacket(oscPacket, format)
 	}
 }
