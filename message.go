@@ -25,15 +25,15 @@ func (m *OSCMessage) ToBytes() []byte {
 	return oscBuffer
 }
 
-func MessageFromBytes(bytes []byte) (OSCMessage, error) {
+func MessageFromBytes(bytes []byte) (*OSCMessage, error) {
 	if len(bytes) == 0 {
-		return OSCMessage{}, errors.New("cannot create OSC Message from empty byte array")
+		return nil, errors.New("cannot create OSC Message from empty byte array")
 	}
 
 	address, typeAndArgBytes := readOSCString(bytes)
 
 	if address[0] != 47 {
-		return OSCMessage{}, errors.New("OSC Message address must start with /")
+		return nil, errors.New("OSC Message address must start with /")
 	}
 
 	oscMessage := OSCMessage{
@@ -46,17 +46,17 @@ func MessageFromBytes(bytes []byte) (OSCMessage, error) {
 	for index, oscType := range typeString {
 		if index == 0 {
 			if oscType != ',' {
-				return OSCMessage{}, errors.New("type string is malformed")
+				return nil, errors.New("type string is malformed")
 			}
 		} else {
 			oscArg, remainingBytes, error := readOSCArg(argBytes, string(oscType))
 			if error != nil {
-				return oscMessage, error
+				return nil, error
 			}
 			argBytes = remainingBytes
 			oscMessage.Args = append(oscMessage.Args, oscArg)
 		}
 	}
 
-	return oscMessage, nil
+	return &oscMessage, nil
 }
