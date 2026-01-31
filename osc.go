@@ -350,3 +350,25 @@ func readOSCArg(bytes []byte, oscType string) (OSCArg, []byte, error) {
 	}
 	return oscArg, remainingBytes, readArgError
 }
+
+func PacketFromBytes(bytes []byte) (OSCPacket, []byte, error) {
+	if len(bytes) == 0 {
+		return nil, bytes, errors.New("cannot create OSC Packet from empty byte array")
+	}
+
+	if bytes[0] == '#' {
+		bundle, remainingBytes, err := BundleFromBytes(bytes)
+		if err != nil {
+			return nil, bytes, err
+		}
+		return bundle, remainingBytes, nil
+	} else if bytes[0] == '/' {
+		message, err := MessageFromBytes(bytes)
+		if err != nil {
+			return nil, bytes, err
+		}
+		return message, []byte{}, nil
+	} else {
+		return nil, bytes, errors.New("OSC Packet must start with # for bundle or / for message")
+	}
+}
