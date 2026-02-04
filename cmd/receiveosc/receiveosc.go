@@ -229,8 +229,6 @@ func listenUDP(netAddress string, format string) {
 			panic(err)
 		}
 
-		fmt.Println("Received UDP packet")
-		fmt.Println(buffer[0:bytesRead])
 		oscPacket, _, err := osc.PacketFromBytes(buffer[0:bytesRead])
 
 		if err != nil {
