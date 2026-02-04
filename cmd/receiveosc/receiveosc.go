@@ -88,7 +88,7 @@ func main() {
 func listenTCP(netAddress string, useSLIP bool, format string) {
 	socket, err := net.Listen("tcp4", netAddress)
 	if err != nil {
-		fmt.Println(err)
+		// TODO(jwetzell): output error properly
 		return
 	}
 
@@ -97,7 +97,7 @@ func listenTCP(netAddress string, useSLIP bool, format string) {
 	for {
 		conn, err := socket.Accept()
 		if err != nil {
-			fmt.Println(err)
+			// TODO(jwetzell): output error properly
 			continue
 		}
 		go handleTCPConnection(conn, useSLIP, format)
@@ -185,9 +185,8 @@ func handlePacket(message osc.OSCPacket, format string) {
 		handleBundle(bundle, format)
 	} else if msg, ok := message.(*osc.OSCMessage); ok {
 		handleMessage(msg, format)
-	} else {
-		fmt.Println("Received unknown OSC Packet type")
 	}
+	// TODO(jwetzell): handle other packet types?
 }
 
 func handleMessage(message *osc.OSCMessage, format string) {
@@ -209,13 +208,13 @@ func listenUDP(netAddress string, format string) {
 
 	s, err := net.ResolveUDPAddr("udp4", netAddress)
 	if err != nil {
-		fmt.Println(err)
+		// TODO(jwetzell): output error properly
 		return
 	}
 
 	connection, err := net.ListenUDP("udp4", s)
 	if err != nil {
-		fmt.Println(err)
+		// TODO(jwetzell): output error properly
 		return
 	}
 
