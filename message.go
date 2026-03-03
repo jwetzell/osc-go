@@ -29,11 +29,14 @@ func MessageFromBytes(bytes []byte) (*OSCMessage, error) {
 	if len(bytes) == 0 {
 		return nil, errors.New("cannot create OSC Message from empty byte array")
 	}
+	if bytes[0] != 47 {
+		return nil, errors.New("OSC Message must start with /")
+	}
 
-	address, typeAndArgBytes := readOSCString(bytes)
+	address, typeAndArgBytes, err := readOSCString(bytes)
 
-	if address[0] != 47 {
-		return nil, errors.New("OSC Message address must start with /")
+	if err != nil {
+		return nil, err
 	}
 
 	oscMessage := OSCMessage{
@@ -41,7 +44,11 @@ func MessageFromBytes(bytes []byte) (*OSCMessage, error) {
 		Args:    []OSCArg{},
 	}
 
-	typeString, argBytes := readOSCString(typeAndArgBytes)
+	typeString, argBytes, err := readOSCString(typeAndArgBytes)
+
+	if err != nil {
+		return nil, err
+	}
 
 	for index, oscType := range typeString {
 		if index == 0 {

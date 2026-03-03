@@ -171,7 +171,7 @@ func argsToBuffer(args []OSCArg) []byte {
 	return argBuffers
 }
 
-func readOSCString(bytes []byte) (string, []byte) {
+func readOSCString(bytes []byte) (string, []byte, error) {
 	//TODO(jwetzell): add error handling
 	oscString := ""
 	stringEndIndex := 0
@@ -190,9 +190,13 @@ func readOSCString(bytes []byte) (string, []byte) {
 		stringEndIndex = stringEndIndex + stringPadding
 	}
 
+	if stringEndIndex > len(bytes) {
+		return "", bytes, errors.New("string data is not properly padded")
+	}
+
 	remainingBytes := bytes[stringEndIndex:]
 
-	return oscString, remainingBytes
+	return oscString, remainingBytes, nil
 }
 
 func readOSCInt32(bytes []byte) (int32, []byte, error) {
@@ -287,27 +291,30 @@ func readOSCArg(bytes []byte, oscType string) (OSCArg, []byte, error) {
 	//TODO(jwetzell): add error handling
 	switch oscType {
 	case "s":
-		argString, bytesLeft := readOSCString(bytes)
+		argString, bytesLeft, err := readOSCString(bytes)
+		if err != nil {
+			return OSCArg{}, bytes, err
+		}
 		oscArg.Value = argString
 		remainingBytes = bytesLeft
 	case "i":
-		argInt, bytesLeft, error := readOSCInt32(bytes)
-		if error != nil {
-			readArgError = error
+		argInt, bytesLeft, err := readOSCInt32(bytes)
+		if err != nil {
+			readArgError = err
 		}
 		oscArg.Value = argInt
 		remainingBytes = bytesLeft
 	case "f":
-		argFloat, bytesLeft, error := readOSCFloat32(bytes)
-		if error != nil {
-			readArgError = error
+		argFloat, bytesLeft, err := readOSCFloat32(bytes)
+		if err != nil {
+			readArgError = err
 		}
 		oscArg.Value = argFloat
 		remainingBytes = bytesLeft
 	case "b":
-		argBytes, bytesLeft, error := readOSCBlob(bytes)
-		if error != nil {
-			readArgError = error
+		argBytes, bytesLeft, err := readOSCBlob(bytes)
+		if err != nil {
+			readArgError = err
 		}
 		oscArg.Value = argBytes
 		remainingBytes = bytesLeft
@@ -324,23 +331,23 @@ func readOSCArg(bytes []byte, oscType string) (OSCArg, []byte, error) {
 		oscArg.Value = math.MaxInt32
 		remainingBytes = bytes
 	case "r":
-		argColor, bytesLeft, error := readOSCColor(bytes)
-		if error != nil {
-			readArgError = error
+		argColor, bytesLeft, err := readOSCColor(bytes)
+		if err != nil {
+			readArgError = err
 		}
 		oscArg.Value = argColor
 		remainingBytes = bytesLeft
 	case "h":
-		argInt, bytesLeft, error := readOSCInt64(bytes)
-		if error != nil {
-			readArgError = error
+		argInt, bytesLeft, err := readOSCInt64(bytes)
+		if err != nil {
+			readArgError = err
 		}
 		oscArg.Value = argInt
 		remainingBytes = bytesLeft
 	case "d":
-		argFloat, bytesLeft, error := readOSCFloat64(bytes)
-		if error != nil {
-			readArgError = error
+		argFloat, bytesLeft, err := readOSCFloat64(bytes)
+		if err != nil {
+			readArgError = err
 		}
 		oscArg.Value = argFloat
 		remainingBytes = bytesLeft

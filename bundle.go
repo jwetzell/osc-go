@@ -30,7 +30,11 @@ func BundleFromBytes(bytes []byte) (*OSCBundle, []byte, error) {
 		return nil, bytes, errors.New("bundle must start with a #")
 	}
 
-	bundleHeader, bytesAfterBundleHeader := readOSCString(bytes)
+	bundleHeader, bytesAfterBundleHeader, err := readOSCString(bytes)
+
+	if err != nil {
+		return nil, bytes, err
+	}
 
 	if bundleHeader != "#bundle" {
 		return nil, bytesAfterBundleHeader, errors.New("bundle must start with #bundle string")
