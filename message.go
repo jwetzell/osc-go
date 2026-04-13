@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func (m *OSCMessage) ToBytes() []byte {
+func (m *OSCMessage) ToBytes() ([]byte, error) {
 	//TODO(jwetzell): add error handling
 	oscBuffer := []byte{}
 
@@ -20,9 +20,13 @@ func (m *OSCMessage) ToBytes() []byte {
 	}
 
 	oscBuffer = append(oscBuffer, stringToOSCBytes(sb.String())...)
-	oscBuffer = append(oscBuffer, argsToBuffer(m.Args)...)
+	argsBuffer, err := argsToBuffer(m.Args)
+	if err != nil {
+		return nil, err
+	}
+	oscBuffer = append(oscBuffer, argsBuffer...)
 
-	return oscBuffer
+	return oscBuffer, nil
 }
 
 func MessageFromBytes(bytes []byte) (*OSCMessage, error) {

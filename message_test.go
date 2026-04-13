@@ -128,10 +128,14 @@ func TestGoodOSCMessageEncoding(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			actual := testCase.message.ToBytes()
+			got, err := testCase.message.ToBytes()
 
-			if !reflect.DeepEqual(actual, testCase.expected) {
-				t.Fatalf("failed to encode properly got '%v', expected '%v'", actual, testCase.expected)
+			if err != nil {
+				t.Fatalf("failed to encode properly: %s", err.Error())
+			}
+
+			if !reflect.DeepEqual(got, testCase.expected) {
+				t.Fatalf("failed to encode properly got '%v', expected '%v'", got, testCase.expected)
 			}
 		})
 	}

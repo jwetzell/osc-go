@@ -26,47 +26,51 @@ func stringToOSCBytes(rawString string) []byte {
 	return []byte(sb.String())
 }
 
-func int32ToOSCBytes(number int32) []byte {
+func int32ToOSCBytes(number int32) ([]byte, error) {
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, number)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return buf.Bytes()
+	return buf.Bytes(), nil
 }
 
-func int64ToOSCBytes(number int64) []byte {
+func int64ToOSCBytes(number int64) ([]byte, error) {
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, number)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return buf.Bytes()
+	return buf.Bytes(), nil
 }
 
-func float32ToOSCBytes(number float32) []byte {
+func float32ToOSCBytes(number float32) ([]byte, error) {
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, number)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return buf.Bytes()
+	return buf.Bytes(), nil
 }
 
-func float64ToOSCBytes(number float64) []byte {
+func float64ToOSCBytes(number float64) ([]byte, error) {
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, number)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return buf.Bytes()
+	return buf.Bytes(), nil
 }
 
-func byteArrayToOSCBytes(bytes []byte) []byte {
+func byteArrayToOSCBytes(bytes []byte) ([]byte, error) {
 	oscBytes := []byte{}
 
 	bytesSize := len(bytes)
-	oscBytes = append(oscBytes, int32ToOSCBytes(int32(bytesSize))...)
+	bytesSizeBytes, err := int32ToOSCBytes(int32(bytesSize))
+	if err != nil {
+		return nil, err
+	}
+	oscBytes = append(oscBytes, bytesSizeBytes...)
 	oscBytes = append(oscBytes, bytes...)
 
 	padLength := 4 - (bytesSize % 4)
@@ -76,17 +80,24 @@ func byteArrayToOSCBytes(bytes []byte) []byte {
 		}
 	}
 
-	return oscBytes
+	return oscBytes, nil
 }
 
-func timeTagToOSCBytes(timeTag OSCTimeTag) []byte {
-	timeTagBytes := int32ToOSCBytes(timeTag.seconds)
-	timeTagBytes = append(timeTagBytes, int32ToOSCBytes(timeTag.fractionalSeconds)...)
+func timeTagToOSCBytes(timeTag OSCTimeTag) ([]byte, error) {
+	timeTagBytes, err := int32ToOSCBytes(timeTag.seconds)
+	if err != nil {
+		return nil, err
+	}
+	fractionalSecondsBytes, err := int32ToOSCBytes(timeTag.fractionalSeconds)
+	if err != nil {
+		return nil, err
+	}
+	timeTagBytes = append(timeTagBytes, fractionalSecondsBytes...)
 
-	return timeTagBytes
+	return timeTagBytes, nil
 }
 
-func argsToBuffer(args []OSCArg) []byte {
+func argsToBuffer(args []OSCArg) ([]byte, error) {
 	//TODO(jwetzell): add error handling
 	var argBuffers = []byte{}
 
@@ -100,29 +111,61 @@ func argsToBuffer(args []OSCArg) []byte {
 			}
 		case "i":
 			if value, ok := arg.Value.(int); ok {
-				argBuffers = append(argBuffers, int32ToOSCBytes(int32(value))...)
+				valueBytes, err := int32ToOSCBytes(int32(value))
+				if err != nil {
+					return nil, err
+				}
+				argBuffers = append(argBuffers, valueBytes...)
 			} else if value, ok := arg.Value.(int32); ok {
-				argBuffers = append(argBuffers, int32ToOSCBytes(value)...)
+				valueBytes, err := int32ToOSCBytes(int32(value))
+				if err != nil {
+					return nil, err
+				}
+				argBuffers = append(argBuffers, valueBytes...)
 			} else {
 				fmt.Println("OSC arg had integer type but non-integer value.")
 			}
 		case "f":
 			if value, ok := arg.Value.(float32); ok {
-				argBuffers = append(argBuffers, float32ToOSCBytes(float32(value))...)
+				valueBytes, err := float32ToOSCBytes(value)
+				if err != nil {
+					return nil, err
+				}
+				argBuffers = append(argBuffers, valueBytes...)
 			} else if value, ok := arg.Value.(float64); ok {
-				argBuffers = append(argBuffers, float32ToOSCBytes(float32(value))...)
+				valueBytes, err := float32ToOSCBytes(float32(value))
+				if err != nil {
+					return nil, err
+				}
+				argBuffers = append(argBuffers, valueBytes...)
 			} else if value, ok := arg.Value.(int); ok {
-				argBuffers = append(argBuffers, float32ToOSCBytes(float32(value))...)
+				valueBytes, err := float32ToOSCBytes(float32(value))
+				if err != nil {
+					return nil, err
+				}
+				argBuffers = append(argBuffers, valueBytes...)
 			} else if value, ok := arg.Value.(int32); ok {
-				argBuffers = append(argBuffers, float32ToOSCBytes(float32(value))...)
+				valueBytes, err := float32ToOSCBytes(float32(value))
+				if err != nil {
+					return nil, err
+				}
+				argBuffers = append(argBuffers, valueBytes...)
 			} else if value, ok := arg.Value.(int64); ok {
-				argBuffers = append(argBuffers, float32ToOSCBytes(float32(value))...)
+				valueBytes, err := float32ToOSCBytes(float32(value))
+				if err != nil {
+					return nil, err
+				}
+				argBuffers = append(argBuffers, valueBytes...)
 			} else {
 				fmt.Println("OSC arg had float type but non-float value.")
 			}
 		case "b":
 			if value, ok := arg.Value.([]byte); ok {
-				argBuffers = append(argBuffers, byteArrayToOSCBytes(value)...)
+				valueBytes, err := byteArrayToOSCBytes(value)
+				if err != nil {
+					return nil, err
+				}
+				argBuffers = append(argBuffers, valueBytes...)
 			} else {
 				fmt.Println("OSC arg had blob type but non-blob value.")
 			}
@@ -142,25 +185,57 @@ func argsToBuffer(args []OSCArg) []byte {
 			}
 		case "h":
 			if value, ok := arg.Value.(int); ok {
-				argBuffers = append(argBuffers, int64ToOSCBytes(int64(value))...)
+				valueBytes, err := int64ToOSCBytes(int64(value))
+				if err != nil {
+					return nil, err
+				}
+				argBuffers = append(argBuffers, valueBytes...)
 			} else if value, ok := arg.Value.(int32); ok {
-				argBuffers = append(argBuffers, int64ToOSCBytes(int64(value))...)
+				valueBytes, err := int64ToOSCBytes(int64(value))
+				if err != nil {
+					return nil, err
+				}
+				argBuffers = append(argBuffers, valueBytes...)
 			} else if value, ok := arg.Value.(int64); ok {
-				argBuffers = append(argBuffers, int64ToOSCBytes(value)...)
+				valueBytes, err := int64ToOSCBytes(value)
+				if err != nil {
+					return nil, err
+				}
+				argBuffers = append(argBuffers, valueBytes...)
 			} else {
 				fmt.Println("OSC arg had integer type but non-integer value.")
 			}
 		case "d":
 			if value, ok := arg.Value.(float32); ok {
-				argBuffers = append(argBuffers, float64ToOSCBytes(float64(value))...)
+				valueBytes, err := float64ToOSCBytes(float64(value))
+				if err != nil {
+					return nil, err
+				}
+				argBuffers = append(argBuffers, valueBytes...)
 			} else if value, ok := arg.Value.(float64); ok {
-				argBuffers = append(argBuffers, float64ToOSCBytes(float64(value))...)
+				valueBytes, err := float64ToOSCBytes(value)
+				if err != nil {
+					return nil, err
+				}
+				argBuffers = append(argBuffers, valueBytes...)
 			} else if value, ok := arg.Value.(int); ok {
-				argBuffers = append(argBuffers, float64ToOSCBytes(float64(value))...)
+				valueBytes, err := float64ToOSCBytes(float64(value))
+				if err != nil {
+					return nil, err
+				}
+				argBuffers = append(argBuffers, valueBytes...)
 			} else if value, ok := arg.Value.(int32); ok {
-				argBuffers = append(argBuffers, float64ToOSCBytes(float64(value))...)
+				valueBytes, err := float64ToOSCBytes(float64(value))
+				if err != nil {
+					return nil, err
+				}
+				argBuffers = append(argBuffers, valueBytes...)
 			} else if value, ok := arg.Value.(int64); ok {
-				argBuffers = append(argBuffers, float64ToOSCBytes(float64(value))...)
+				valueBytes, err := float64ToOSCBytes(float64(value))
+				if err != nil {
+					return nil, err
+				}
+				argBuffers = append(argBuffers, valueBytes...)
 			} else {
 				fmt.Println("OSC arg had float type but non-float value.")
 			}
@@ -168,7 +243,7 @@ func argsToBuffer(args []OSCArg) []byte {
 			fmt.Printf("unhandled osc type: %s.\n", oscType)
 		}
 	}
-	return argBuffers
+	return argBuffers, nil
 }
 
 func readOSCString(bytes []byte) (string, []byte, error) {

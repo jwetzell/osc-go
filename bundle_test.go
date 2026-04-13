@@ -9,9 +9,9 @@ import (
 func TestOSCBundleEncoding(t *testing.T) {
 
 	testCases := []struct {
-		description string
-		bundle      *OSCBundle
-		expected    []byte
+		name     string
+		bundle   *OSCBundle
+		expected []byte
 	}{
 		{
 			"simple contents single message",
@@ -32,13 +32,19 @@ func TestOSCBundleEncoding(t *testing.T) {
 
 	for _, testCase := range testCases {
 
-		actual := testCase.bundle.ToBytes()
+		t.Run(testCase.name, func(t *testing.T) {
 
-		if !reflect.DeepEqual(actual, testCase.expected) {
-			t.Errorf("Test '%s' failed to encode properly", testCase.description)
-			fmt.Printf("expected: %v\n", testCase.expected)
-			fmt.Printf("actual: %v\n", actual)
-		}
+			got, err := testCase.bundle.ToBytes()
+
+			if err != nil {
+				t.Fatalf("failed to encode properly: %s", err.Error())
+			}
+
+			if !reflect.DeepEqual(got, testCase.expected) {
+				t.Fatalf("failed to encode properly got '%v', expected '%v'", got, testCase.expected)
+			}
+		})
+
 	}
 
 }

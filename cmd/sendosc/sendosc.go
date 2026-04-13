@@ -208,7 +208,10 @@ func send(host string, port int32, address string, args []string, types []string
 
 	}
 
-	oscMessageBuffer := oscMessage.ToBytes()
+	oscMessageBuffer, err := oscMessage.ToBytes()
+	if err != nil {
+		panic(err)
+	}
 
 	if slip {
 		oscMessageBuffer = slipEncode(oscMessageBuffer)

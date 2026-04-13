@@ -4,21 +4,32 @@ import (
 	"errors"
 )
 
-func (b *OSCBundle) ToBytes() []byte {
+func (b *OSCBundle) ToBytes() ([]byte, error) {
 
 	bytes := stringToOSCBytes("#bundle")
 
-	bytes = append(bytes, timeTagToOSCBytes(b.TimeTag)...)
+	timeTagBytes, err := timeTagToOSCBytes(b.TimeTag)
+	if err != nil {
+		return nil, err
+	}
+	bytes = append(bytes, timeTagBytes...)
 
 	for _, packet := range b.Contents {
-		packetBytes := packet.ToBytes()
-		packetLength := len(packet.ToBytes())
+		packetBytes, err := packet.ToBytes()
+		if err != nil {
+			return nil, err
+		}
+		packetLength := len(packetBytes)
 
-		bytes = append(bytes, int32ToOSCBytes(int32(packetLength))...)
+		packetLengthBytes, err := int32ToOSCBytes(int32(packetLength))
+		if err != nil {
+			return nil, err
+		}
+		bytes = append(bytes, packetLengthBytes...)
 		bytes = append(bytes, packetBytes...)
 	}
 
-	return bytes
+	return bytes, nil
 }
 
 func BundleFromBytes(bytes []byte) (*OSCBundle, []byte, error) {

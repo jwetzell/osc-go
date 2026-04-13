@@ -175,7 +175,10 @@ func make(address string, args []string, types []string, slip bool) {
 		oscMessage.Args = append(oscMessage.Args, argToTypedArg(arg, oscType))
 	}
 
-	oscMessageBuffer := oscMessage.ToBytes()
+	oscMessageBuffer, err := oscMessage.ToBytes()
+	if err != nil {
+		panic(err)
+	}
 
 	if slip {
 		oscMessageBuffer = slipEncode(oscMessageBuffer)
