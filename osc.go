@@ -123,7 +123,7 @@ func argsToBuffer(args []OSCArg) ([]byte, error) {
 				}
 				argBuffers = append(argBuffers, valueBytes...)
 			} else {
-				return nil, errors.New("OSC arg had integer type but non-integer value")
+				return nil, errors.New("OSC arg had int32 type but non-number value")
 			}
 		case "f":
 			if value, ok := arg.Value.(float32); ok {
@@ -157,7 +157,7 @@ func argsToBuffer(args []OSCArg) ([]byte, error) {
 				}
 				argBuffers = append(argBuffers, valueBytes...)
 			} else {
-				return nil, errors.New("OSC arg had float type but non-float value.")
+				return nil, errors.New("OSC arg had float32 type but non-number value")
 			}
 		case "b":
 			if value, ok := arg.Value.([]byte); ok {
@@ -167,7 +167,7 @@ func argsToBuffer(args []OSCArg) ([]byte, error) {
 				}
 				argBuffers = append(argBuffers, valueBytes...)
 			} else {
-				return nil, errors.New("OSC arg had blob type but non-blob value.")
+				return nil, errors.New("OSC arg had blob type but non-blob value")
 			}
 		case "T":
 			argBuffers = append(argBuffers, make([]byte, 0)...)
@@ -179,6 +179,9 @@ func argsToBuffer(args []OSCArg) ([]byte, error) {
 			argBuffers = append(argBuffers, make([]byte, 0)...)
 		case "r":
 			color, ok := arg.Value.(OSCColor)
+			if !ok {
+				return nil, errors.New("OSC arg had color type but non-color value")
+			}
 			if ok {
 				colorBytes := []byte{color.r, color.g, color.b, color.a}
 				argBuffers = append(argBuffers, colorBytes...)
@@ -203,7 +206,7 @@ func argsToBuffer(args []OSCArg) ([]byte, error) {
 				}
 				argBuffers = append(argBuffers, valueBytes...)
 			} else {
-				return nil, errors.New("OSC arg had integer type but non-integer value.")
+				return nil, errors.New("OSC arg had int64 type but non-number value")
 			}
 		case "d":
 			if value, ok := arg.Value.(float32); ok {
@@ -237,7 +240,7 @@ func argsToBuffer(args []OSCArg) ([]byte, error) {
 				}
 				argBuffers = append(argBuffers, valueBytes...)
 			} else {
-				return nil, errors.New("OSC arg had float type but non-float value.")
+				return nil, errors.New("OSC arg had float64 type but non-number value")
 			}
 		default:
 			return nil, fmt.Errorf("unsupported OSC argument type: %s", oscType)

@@ -166,6 +166,62 @@ func TestBadOSCMessageEncoding(t *testing.T) {
 			},
 			errorString: "unsupported OSC argument type: x",
 		},
+		{
+			name: "string arg that is not a string",
+			message: &OSCMessage{
+				Address: "/hello",
+				Args:    []OSCArg{{Type: "s", Value: 123}},
+			},
+			errorString: "OSC arg had string type but non-string value",
+		},
+		{
+			name: "int32 arg that is not a number",
+			message: &OSCMessage{
+				Address: "/hello",
+				Args:    []OSCArg{{Type: "i", Value: "not an int"}},
+			},
+			errorString: "OSC arg had int32 type but non-number value",
+		},
+		{
+			name: "float32 arg that is not a number",
+			message: &OSCMessage{
+				Address: "/hello",
+				Args:    []OSCArg{{Type: "f", Value: "not a float"}},
+			},
+			errorString: "OSC arg had float32 type but non-number value",
+		},
+		{
+			name: "int64 arg that is not a number",
+			message: &OSCMessage{
+				Address: "/hello",
+				Args:    []OSCArg{{Type: "h", Value: "not an int"}},
+			},
+			errorString: "OSC arg had int64 type but non-number value",
+		},
+		{
+			name: "float64 arg that is not a number",
+			message: &OSCMessage{
+				Address: "/hello",
+				Args:    []OSCArg{{Type: "d", Value: "not a float"}},
+			},
+			errorString: "OSC arg had float64 type but non-number value",
+		},
+		{
+			name: "blob arg that is not a byte array",
+			message: &OSCMessage{
+				Address: "/hello",
+				Args:    []OSCArg{{Type: "b", Value: "not a blob"}},
+			},
+			errorString: "OSC arg had blob type but non-blob value",
+		},
+		{
+			name: "color arg that is not an OSCColor",
+			message: &OSCMessage{
+				Address: "/hello",
+				Args:    []OSCArg{{Type: "r", Value: "not a color"}},
+			},
+			errorString: "OSC arg had color type but non-color value",
+		},
 	}
 
 	for _, testCase := range testCases {
