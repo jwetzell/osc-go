@@ -107,7 +107,7 @@ func argsToBuffer(args []OSCArg) ([]byte, error) {
 			if value, ok := arg.Value.(string); ok {
 				argBuffers = append(argBuffers, stringToOSCBytes(value)...)
 			} else {
-				fmt.Println("OSC arg had string type but non-string value.")
+				return nil, errors.New("OSC arg had string type but non-string value")
 			}
 		case "i":
 			if value, ok := arg.Value.(int); ok {
@@ -123,7 +123,7 @@ func argsToBuffer(args []OSCArg) ([]byte, error) {
 				}
 				argBuffers = append(argBuffers, valueBytes...)
 			} else {
-				fmt.Println("OSC arg had integer type but non-integer value.")
+				return nil, errors.New("OSC arg had integer type but non-integer value")
 			}
 		case "f":
 			if value, ok := arg.Value.(float32); ok {
@@ -157,7 +157,7 @@ func argsToBuffer(args []OSCArg) ([]byte, error) {
 				}
 				argBuffers = append(argBuffers, valueBytes...)
 			} else {
-				fmt.Println("OSC arg had float type but non-float value.")
+				return nil, errors.New("OSC arg had float type but non-float value.")
 			}
 		case "b":
 			if value, ok := arg.Value.([]byte); ok {
@@ -167,7 +167,7 @@ func argsToBuffer(args []OSCArg) ([]byte, error) {
 				}
 				argBuffers = append(argBuffers, valueBytes...)
 			} else {
-				fmt.Println("OSC arg had blob type but non-blob value.")
+				return nil, errors.New("OSC arg had blob type but non-blob value.")
 			}
 		case "T":
 			argBuffers = append(argBuffers, make([]byte, 0)...)
@@ -203,7 +203,7 @@ func argsToBuffer(args []OSCArg) ([]byte, error) {
 				}
 				argBuffers = append(argBuffers, valueBytes...)
 			} else {
-				fmt.Println("OSC arg had integer type but non-integer value.")
+				return nil, errors.New("OSC arg had integer type but non-integer value.")
 			}
 		case "d":
 			if value, ok := arg.Value.(float32); ok {
@@ -237,7 +237,7 @@ func argsToBuffer(args []OSCArg) ([]byte, error) {
 				}
 				argBuffers = append(argBuffers, valueBytes...)
 			} else {
-				fmt.Println("OSC arg had float type but non-float value.")
+				return nil, errors.New("OSC arg had float type but non-float value.")
 			}
 		default:
 			return nil, fmt.Errorf("unsupported OSC argument type: %s", oscType)
