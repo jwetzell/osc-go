@@ -142,6 +142,47 @@ func TestGoodOSCMessageEncoding(t *testing.T) {
 
 }
 
+func TestBadOSCMessageEncoding(t *testing.T) {
+	testCases := []struct {
+		name        string
+		message     *OSCMessage
+		errorString string
+	}{
+		{
+			name:        "empty message",
+			message:     &OSCMessage{},
+			errorString: "OSC Message must have an address",
+		},
+		{
+			name:        "address does not start with /",
+			message:     &OSCMessage{Address: "hello"},
+			errorString: "OSC Message address must start with /",
+		},
+		{
+			name: "arg with unsupported type",
+			message: &OSCMessage{
+				Address: "/hello",
+				Args:    []OSCArg{{Type: "x", Value: "unsupported"}},
+			},
+			errorString: "unsupported OSC argument type: x",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got, err := testCase.message.ToBytes()
+
+			if err == nil {
+				t.Fatalf("OSCMessage.ToBytes() expected to fail but got: %+v", got)
+			}
+
+			if err.Error() != testCase.errorString {
+				t.Fatalf("OSCMessage.ToBytes() got error '%s', expected '%s'", err.Error(), testCase.errorString)
+			}
+		})
+	}
+}
+
 func TestGoodOSCMessageDecoding(t *testing.T) {
 	testCases := []struct {
 		name     string

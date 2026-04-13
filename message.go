@@ -6,7 +6,15 @@ import (
 )
 
 func (m *OSCMessage) ToBytes() ([]byte, error) {
-	//TODO(jwetzell): add error handling
+
+	if len(m.Address) == 0 {
+		return nil, errors.New("OSC Message must have an address")
+	}
+
+	if m.Address[0] != '/' {
+		return nil, errors.New("OSC Message address must start with /")
+	}
+
 	oscBuffer := []byte{}
 
 	oscBuffer = append(oscBuffer, stringToOSCBytes(m.Address)...)
@@ -18,7 +26,6 @@ func (m *OSCMessage) ToBytes() ([]byte, error) {
 	for _, arg := range m.Args {
 		sb.WriteString(arg.Type)
 	}
-
 	oscBuffer = append(oscBuffer, stringToOSCBytes(sb.String())...)
 	argsBuffer, err := argsToBuffer(m.Args)
 	if err != nil {

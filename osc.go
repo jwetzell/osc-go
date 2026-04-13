@@ -240,7 +240,7 @@ func argsToBuffer(args []OSCArg) ([]byte, error) {
 				fmt.Println("OSC arg had float type but non-float value.")
 			}
 		default:
-			fmt.Printf("unhandled osc type: %s.\n", oscType)
+			return nil, fmt.Errorf("unsupported OSC argument type: %s", oscType)
 		}
 	}
 	return argBuffers, nil
