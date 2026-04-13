@@ -298,17 +298,31 @@ func TestBadOSCMessageDecoding(t *testing.T) {
 		{
 			name:        "address string not padded",
 			bytes:       []byte{47, 104, 101, 108, 108, 111, 0},
-			errorString: "string data is not properly padded",
+			errorString: "OSC string is not properly padded",
 		},
 		{
 			name:        "type string not padded",
 			bytes:       []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 0},
-			errorString: "string data is not properly padded",
+			errorString: "OSC string is not properly padded",
 		},
 		{
 			name:        "type string does not start with ,",
 			bytes:       []byte{47, 104, 101, 108, 108, 111, 0, 0, 45, 0, 0, 0},
 			errorString: "type string is malformed",
+		},
+		{
+			name: "string arg not null-terminated",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 115, 0, 0, 97, 114, 103, 49,
+			},
+			errorString: "OSC string must be null-terminated",
+		},
+		{
+			name: "string arg not padded",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 115, 0, 0, 104, 105, 0,
+			},
+			errorString: "OSC string is not properly padded",
 		},
 	}
 

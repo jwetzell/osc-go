@@ -172,16 +172,21 @@ func argsToBuffer(args []OSCArg) []byte {
 }
 
 func readOSCString(bytes []byte) (string, []byte, error) {
-	//TODO(jwetzell): add error handling
 	oscString := ""
 	stringEndIndex := 0
 
+	nullByteFound := false
 	for index, byteIn := range bytes {
 		if byteIn == 0 {
+			nullByteFound = true
 			oscString = string(bytes[0:index])
 			stringEndIndex = index + 1
 			break
 		}
+	}
+
+	if !nullByteFound {
+		return "", bytes, errors.New("OSC string must be null-terminated")
 	}
 
 	stringPadding := 4 - (stringEndIndex % 4)
@@ -191,7 +196,7 @@ func readOSCString(bytes []byte) (string, []byte, error) {
 	}
 
 	if stringEndIndex > len(bytes) {
-		return "", bytes, errors.New("string data is not properly padded")
+		return "", bytes, errors.New("OSC string is not properly padded")
 	}
 
 	remainingBytes := bytes[stringEndIndex:]

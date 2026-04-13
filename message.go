@@ -44,6 +44,11 @@ func MessageFromBytes(bytes []byte) (*OSCMessage, error) {
 		Args:    []OSCArg{},
 	}
 
+	if len(typeAndArgBytes) == 0 {
+		// NOTE(jwetzell): no type string return early.
+		return &oscMessage, nil
+	}
+
 	typeString, argBytes, err := readOSCString(typeAndArgBytes)
 
 	if err != nil {
@@ -56,9 +61,9 @@ func MessageFromBytes(bytes []byte) (*OSCMessage, error) {
 				return nil, errors.New("type string is malformed")
 			}
 		} else {
-			oscArg, remainingBytes, error := readOSCArg(argBytes, string(oscType))
-			if error != nil {
-				return nil, error
+			oscArg, remainingBytes, err := readOSCArg(argBytes, string(oscType))
+			if err != nil {
+				return nil, err
 			}
 			argBytes = remainingBytes
 			oscMessage.Args = append(oscMessage.Args, oscArg)
