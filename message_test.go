@@ -290,6 +290,26 @@ func TestBadOSCMessageDecoding(t *testing.T) {
 			bytes:       []byte{},
 			errorString: "cannot create OSC Message from empty byte array",
 		},
+		{
+			name:        "does not start with /",
+			bytes:       []byte{0, 104, 101, 108, 108, 111, 0, 0},
+			errorString: "OSC Message must start with /",
+		},
+		{
+			name:        "address string not padded",
+			bytes:       []byte{47, 104, 101, 108, 108, 111, 0},
+			errorString: "string data is not properly padded",
+		},
+		{
+			name:        "type string not padded",
+			bytes:       []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 0},
+			errorString: "string data is not properly padded",
+		},
+		{
+			name:        "type string does not start with ,",
+			bytes:       []byte{47, 104, 101, 108, 108, 111, 0, 0, 45, 0, 0, 0},
+			errorString: "type string is malformed",
+		},
 	}
 
 	for _, testCase := range testCases {
