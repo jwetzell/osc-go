@@ -233,3 +233,86 @@ func TestBadOSCArgsToBuffer(t *testing.T) {
 		})
 	}
 }
+
+func TestGoodPacketFromBytes(t *testing.T) {
+
+	testCases := []struct {
+		name     string
+		expected OSCPacket
+		bytes    []byte
+	}{
+		{
+			name: "message with no args",
+			expected: &OSCMessage{
+				Address: "/hello",
+				Args:    []OSCArg{},
+			},
+			bytes: []byte{47, 104, 101, 108, 108, 111, 0, 0},
+		},
+		{
+			name: "bundle with one message with no args",
+			expected: &OSCBundle{
+				TimeTag: OSCTimeTag{
+					seconds:           32,
+					fractionalSeconds: 0,
+				},
+				Contents: []OSCPacket{&OSCMessage{Address: "/oscillator/4/frequency", Args: []OSCArg{{Type: "f", Value: float32(440)}}}},
+			},
+			bytes: []byte{35, 98, 117, 110, 100, 108, 101, 0, 0, 0, 0,
+				32, 0, 0, 0, 0, 0, 0, 0, 32, 47, 111,
+				115, 99, 105, 108, 108, 97, 116, 111, 114, 47, 52,
+				47, 102, 114, 101, 113, 117, 101, 110, 99, 121, 0,
+				44, 102, 0, 0, 67, 220, 0, 0},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got, remainingBytes, err := PacketFromBytes(testCase.bytes)
+
+			if err != nil {
+				t.Fatalf("failed to decode properly: %s", err.Error())
+			}
+
+			if len(remainingBytes) != 0 {
+				t.Fatalf("failed to decode properly, expected no remaining bytes but got: %v", remainingBytes)
+			}
+
+			if !reflect.DeepEqual(got, testCase.expected) {
+				t.Fatalf("failed to decode properly got '%v', expected '%v'", got, testCase.expected)
+			}
+		})
+	}
+}
+
+func TestBadPacketFromBytes(t *testing.T) {
+
+	testCases := []struct {
+		name        string
+		bytes       []byte
+		errorString string
+	}{
+		{name: "empty bytes",
+			bytes:       []byte{},
+			errorString: "cannot create OSC Packet from empty byte array",
+		},
+		{name: "packet that does not start with / or #",
+			bytes:       []byte{0, 1, 2, 3},
+			errorString: "OSC Packet must start with # for bundle or / for message",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got, _, err := PacketFromBytes(testCase.bytes)
+
+			if err == nil {
+				t.Fatalf("PacketFromBytes expected to fail but got: %+v", got)
+			}
+
+			if err.Error() != testCase.errorString {
+				t.Fatalf("PacketFromBytes got error '%s', expected '%s'", err.Error(), testCase.errorString)
+			}
+		})
+	}
+}
