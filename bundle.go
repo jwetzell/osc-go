@@ -4,30 +4,41 @@ import (
 	"errors"
 )
 
-func (b *OSCBundle) ToBytes() []byte {
+func (b *OSCBundle) ToBytes() ([]byte, error) {
 
 	bytes := stringToOSCBytes("#bundle")
 
-	bytes = append(bytes, timeTagToOSCBytes(b.TimeTag)...)
+	timeTagBytes, err := timeTagToOSCBytes(b.TimeTag)
+	if err != nil {
+		return nil, err
+	}
+	bytes = append(bytes, timeTagBytes...)
 
 	for _, packet := range b.Contents {
-		packetBytes := packet.ToBytes()
-		packetLength := len(packet.ToBytes())
+		packetBytes, err := packet.ToBytes()
+		if err != nil {
+			return nil, err
+		}
+		packetLength := len(packetBytes)
 
-		bytes = append(bytes, int32ToOSCBytes(int32(packetLength))...)
+		packetLengthBytes, err := int32ToOSCBytes(int32(packetLength))
+		if err != nil {
+			return nil, err
+		}
+		bytes = append(bytes, packetLengthBytes...)
 		bytes = append(bytes, packetBytes...)
 	}
 
-	return bytes
+	return bytes, nil
 }
 
 func BundleFromBytes(bytes []byte) (*OSCBundle, []byte, error) {
 	if len(bytes) < 20 {
-		return nil, bytes, errors.New("bundle has to be at least 20 bytes")
+		return nil, bytes, errors.New("OSC Bundle has to be at least 20 bytes")
 	}
 
 	if bytes[0] != 35 {
-		return nil, bytes, errors.New("bundle must start with a #")
+		return nil, bytes, errors.New("OSC Bundle must start with a #")
 	}
 
 	bundleHeader, bytesAfterBundleHeader, err := readOSCString(bytes)
@@ -37,7 +48,7 @@ func BundleFromBytes(bytes []byte) (*OSCBundle, []byte, error) {
 	}
 
 	if bundleHeader != "#bundle" {
-		return nil, bytesAfterBundleHeader, errors.New("bundle must start with #bundle string")
+		return nil, bytesAfterBundleHeader, errors.New("OSC Bundle must start with #bundle string")
 	}
 
 	timeTag, bytesAfterTimeTag, err := readOSCTimeTag(bytesAfterBundleHeader)

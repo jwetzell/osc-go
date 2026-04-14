@@ -128,14 +128,115 @@ func TestGoodOSCMessageEncoding(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			actual := testCase.message.ToBytes()
+			got, err := testCase.message.ToBytes()
 
-			if !reflect.DeepEqual(actual, testCase.expected) {
-				t.Fatalf("failed to encode properly got '%v', expected '%v'", actual, testCase.expected)
+			if err != nil {
+				t.Fatalf("failed to encode properly: %s", err.Error())
+			}
+
+			if !reflect.DeepEqual(got, testCase.expected) {
+				t.Fatalf("failed to encode properly got '%v', expected '%v'", got, testCase.expected)
 			}
 		})
 	}
 
+}
+
+func TestBadOSCMessageEncoding(t *testing.T) {
+	testCases := []struct {
+		name        string
+		message     *OSCMessage
+		errorString string
+	}{
+		{
+			name:        "empty message",
+			message:     &OSCMessage{},
+			errorString: "OSC Message must have an address",
+		},
+		{
+			name:        "address does not start with /",
+			message:     &OSCMessage{Address: "hello"},
+			errorString: "OSC Message address must start with /",
+		},
+		{
+			name: "arg with unsupported type",
+			message: &OSCMessage{
+				Address: "/hello",
+				Args:    []OSCArg{{Type: "x", Value: "unsupported"}},
+			},
+			errorString: "unsupported OSC argument type: x",
+		},
+		{
+			name: "string arg that is not a string",
+			message: &OSCMessage{
+				Address: "/hello",
+				Args:    []OSCArg{{Type: "s", Value: 123}},
+			},
+			errorString: "OSC arg had string type but non-string value",
+		},
+		{
+			name: "int32 arg that is not a number",
+			message: &OSCMessage{
+				Address: "/hello",
+				Args:    []OSCArg{{Type: "i", Value: "not an int"}},
+			},
+			errorString: "OSC arg had int32 type but non-number value",
+		},
+		{
+			name: "float32 arg that is not a number",
+			message: &OSCMessage{
+				Address: "/hello",
+				Args:    []OSCArg{{Type: "f", Value: "not a float"}},
+			},
+			errorString: "OSC arg had float32 type but non-number value",
+		},
+		{
+			name: "int64 arg that is not a number",
+			message: &OSCMessage{
+				Address: "/hello",
+				Args:    []OSCArg{{Type: "h", Value: "not an int"}},
+			},
+			errorString: "OSC arg had int64 type but non-number value",
+		},
+		{
+			name: "float64 arg that is not a number",
+			message: &OSCMessage{
+				Address: "/hello",
+				Args:    []OSCArg{{Type: "d", Value: "not a float"}},
+			},
+			errorString: "OSC arg had float64 type but non-number value",
+		},
+		{
+			name: "blob arg that is not a byte array",
+			message: &OSCMessage{
+				Address: "/hello",
+				Args:    []OSCArg{{Type: "b", Value: "not a blob"}},
+			},
+			errorString: "OSC arg had blob type but non-blob value",
+		},
+		{
+			name: "color arg that is not an OSCColor",
+			message: &OSCMessage{
+				Address: "/hello",
+				Args:    []OSCArg{{Type: "r", Value: "not a color"}},
+			},
+			errorString: "OSC arg had color type but non-color value",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got, err := testCase.message.ToBytes()
+
+			if err == nil {
+				t.Fatalf("OSCMessage.ToBytes() expected to fail but got: %+v", got)
+			}
+
+			if err.Error() != testCase.errorString {
+				t.Fatalf("OSCMessage.ToBytes() got error '%s', expected '%s'", err.Error(), testCase.errorString)
+			}
+		})
+	}
 }
 
 func TestGoodOSCMessageDecoding(t *testing.T) {
@@ -323,6 +424,76 @@ func TestBadOSCMessageDecoding(t *testing.T) {
 				47, 104, 101, 108, 108, 111, 0, 0, 44, 115, 0, 0, 104, 105, 0,
 			},
 			errorString: "OSC string is not properly padded",
+		},
+		{
+			name: "int32 arg not 4 bytes",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 105, 0, 0, 0,
+			},
+			errorString: "OSC int32 arg is not 4 bytes",
+		},
+		{
+			name: "int64 arg not 8 bytes",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 104, 0, 0, 0, 0, 0, 0,
+			},
+			errorString: "OSC int64 arg is not 8 bytes",
+		},
+		{
+			name: "float32 arg not 4 bytes",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 102, 0, 0, 66,
+			},
+			errorString: "OSC float32 arg is not 4 bytes",
+		},
+		{
+			name: "float64 arg not 8 bytes",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 100, 0, 0, 0,
+			},
+			errorString: "OSC float64 arg is not 8 bytes",
+		},
+		{
+			name: "blob arg size not valid",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 98, 0, 0, 0, 0, 0,
+			},
+			errorString: "OSC blob arg size not valid: OSC int32 arg is not 4 bytes",
+		},
+		{
+			name: "blob arg size mismatch",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 98, 0, 0, 0, 0, 0, 4, 98, 108, 111,
+			},
+			errorString: "OSC blob arg size not valid: size specified is larger than remaining bytes",
+		},
+		{
+			name: "color arg not 4 bytes",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 114, 0, 0, 20, 21,
+			},
+			errorString: "OSC color arg is not 4 bytes",
+		},
+		{
+			name: "time tag arg seconds not complete",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 116, 0, 0, 0,
+			},
+			errorString: "OSC time tag seconds are not valid: OSC int32 arg is not 4 bytes",
+		},
+		{
+			name: "time tag arg fractional seconds not complete",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 116, 0, 0, 0, 32, 0, 0, 0,
+			},
+			errorString: "OSC time tag fractional seconds are not valid: OSC int32 arg is not 4 bytes",
+		},
+		{
+			name: "unknown arg type",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 120, 0, 0,
+			},
+			errorString: "unsupported OSC argument type: x",
 		},
 	}
 

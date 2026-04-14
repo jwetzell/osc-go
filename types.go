@@ -1,7 +1,7 @@
 package osc
 
 type OSCPacket interface {
-	ToBytes() []byte
+	ToBytes() ([]byte, error)
 }
 
 type OSCBundle struct {

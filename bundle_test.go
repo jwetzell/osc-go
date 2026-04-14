@@ -1,28 +1,27 @@
 package osc
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 )
 
-func TestOSCBundleEncoding(t *testing.T) {
+func TestGoodOSCBundleEncoding(t *testing.T) {
 
 	testCases := []struct {
-		description string
-		bundle      *OSCBundle
-		expected    []byte
+		name     string
+		bundle   *OSCBundle
+		expected []byte
 	}{
 		{
-			"simple contents single message",
-			&OSCBundle{
+			name: "simple contents single message",
+			bundle: &OSCBundle{
 				TimeTag: OSCTimeTag{
 					seconds:           32,
 					fractionalSeconds: 0,
 				},
 				Contents: []OSCPacket{&OSCMessage{Address: "/oscillator/4/frequency", Args: []OSCArg{{Type: "f", Value: float32(440)}}}},
 			},
-			[]byte{35, 98, 117, 110, 100, 108, 101, 0, 0, 0, 0,
+			expected: []byte{35, 98, 117, 110, 100, 108, 101, 0, 0, 0, 0,
 				32, 0, 0, 0, 0, 0, 0, 0, 32, 47, 111,
 				115, 99, 105, 108, 108, 97, 116, 111, 114, 47, 52,
 				47, 102, 114, 101, 113, 117, 101, 110, 99, 121, 0,
@@ -31,59 +30,183 @@ func TestOSCBundleEncoding(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
 
-		actual := testCase.bundle.ToBytes()
+			got, err := testCase.bundle.ToBytes()
 
-		if !reflect.DeepEqual(actual, testCase.expected) {
-			t.Errorf("Test '%s' failed to encode properly", testCase.description)
-			fmt.Printf("expected: %v\n", testCase.expected)
-			fmt.Printf("actual: %v\n", actual)
-		}
+			if err != nil {
+				t.Fatalf("failed to encode properly: %s", err.Error())
+			}
+
+			if !reflect.DeepEqual(got, testCase.expected) {
+				t.Fatalf("failed to encode properly got '%v', expected '%v'", got, testCase.expected)
+			}
+		})
 	}
-
 }
 
-func TestOSCBundleDecoding(t *testing.T) {
+func TestBadOSCBundleEncoding(t *testing.T) {
+
 	testCases := []struct {
-		description string
-		expected    *OSCBundle
-		bytes       []byte
+		name        string
+		bundle      *OSCBundle
+		errorString string
 	}{
 		{
-			"simple contents single message",
-			&OSCBundle{
+			name: "bundle contains message with bad address",
+			bundle: &OSCBundle{
+				TimeTag: OSCTimeTag{
+					seconds:           32,
+					fractionalSeconds: 0,
+				},
+				Contents: []OSCPacket{&OSCMessage{Address: "hello", Args: []OSCArg{}}},
+			},
+			errorString: "OSC Message address must start with /",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+
+			got, err := testCase.bundle.ToBytes()
+
+			if err == nil {
+				t.Fatalf("OSCBundle.ToBytes() expected to fail but got: %+v", got)
+			}
+
+			if err.Error() != testCase.errorString {
+				t.Fatalf("OSCBundle.ToBytes() got error '%s', expected '%s'", err.Error(), testCase.errorString)
+			}
+		})
+	}
+}
+
+func TestGoodOSCBundleDecoding(t *testing.T) {
+	testCases := []struct {
+		name     string
+		expected *OSCBundle
+		bytes    []byte
+	}{
+		{
+			name: "simple contents single message",
+			expected: &OSCBundle{
 				TimeTag: OSCTimeTag{
 					seconds:           32,
 					fractionalSeconds: 0,
 				},
 				Contents: []OSCPacket{&OSCMessage{Address: "/oscillator/4/frequency", Args: []OSCArg{{Type: "f", Value: float32(440)}}}},
 			},
-			[]byte{35, 98, 117, 110, 100, 108, 101, 0, 0, 0, 0,
+			bytes: []byte{35, 98, 117, 110, 100, 108, 101, 0, 0, 0, 0,
 				32, 0, 0, 0, 0, 0, 0, 0, 32, 47, 111,
 				115, 99, 105, 108, 108, 97, 116, 111, 114, 47, 52,
+				47, 102, 114, 101, 113, 117, 101, 110, 99, 121, 0,
+				44, 102, 0, 0, 67, 220, 0, 0},
+		},
+		{
+			name: "simple contents nested bundle",
+			expected: &OSCBundle{
+				TimeTag: OSCTimeTag{
+					seconds:           32,
+					fractionalSeconds: 0,
+				},
+				Contents: []OSCPacket{&OSCBundle{
+					TimeTag: OSCTimeTag{
+						seconds:           64,
+						fractionalSeconds: 0,
+					},
+					Contents: []OSCPacket{&OSCMessage{Address: "/oscillator/4/frequency", Args: []OSCArg{{Type: "f", Value: float32(440)}}}},
+				}},
+			},
+			bytes: []byte{35, 98, 117, 110, 100, 108, 101, 0, // #bundle
+				0, 0, 0, 32, 0, 0, 0, 0, // time tag
+				0, 0, 0, 52, // content size
+				35, 98, 117, 110, 100, 108, 101, 0, // #bundle
+				0, 0, 0, 64, 0, 0, 0, 0, // time tag
+				0, 0, 0, 32, // content size
+				47, 111, 115, 99, 105, 108, 108, 97, 116, 111, 114, 47, 52,
 				47, 102, 114, 101, 113, 117, 101, 110, 99, 121, 0,
 				44, 102, 0, 0, 67, 220, 0, 0},
 		},
 	}
 
 	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			actual, remainingBytes, error := BundleFromBytes(testCase.bytes)
 
-		actual, remainingBytes, error := BundleFromBytes(testCase.bytes)
+			if error != nil {
+				t.Fatalf("failed to decode properly: %s", error.Error())
+			}
 
-		if error != nil {
-			fmt.Println(error)
-			t.Errorf("Test '%s' failed to encode properly", testCase.description)
-		}
+			if len(remainingBytes) > 0 {
+				t.Fatalf("should not have any remaining bytes")
+			}
 
-		if len(remainingBytes) > 0 {
-			t.Errorf("Test '%s' should not have any remaining bytes", testCase.description)
-		}
+			if !reflect.DeepEqual(actual, testCase.expected) {
+				t.Fatalf("failed to decode properly got '%v', expected '%v'", actual, testCase.expected)
+			}
+		})
+	}
+}
 
-		if !reflect.DeepEqual(actual, testCase.expected) {
-			t.Errorf("Test '%s' failed to encode bundle properly", testCase.description)
-			fmt.Printf("expected: %v\n", testCase.expected)
-			fmt.Printf("actual: %v\n", actual)
-		}
+func TestBadOSCBundleDecoding(t *testing.T) {
+	testCases := []struct {
+		name        string
+		bytes       []byte
+		errorString string
+	}{
+		{
+			name:        "empty byte array",
+			bytes:       []byte{},
+			errorString: "OSC Bundle has to be at least 20 bytes",
+		},
+		{
+			name:        "does not start with #",
+			bytes:       []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			errorString: "OSC Bundle must start with a #",
+		},
+		{
+			name:        "does not start with #bundle",
+			bytes:       []byte{35, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			errorString: "OSC Bundle must start with #bundle string",
+		},
+		{
+			name: "bundle header not properly null terminated",
+			bytes: []byte{
+				35, 98, 117, 110, 100, 108, 101,
+				35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35},
+			errorString: "OSC string must be null-terminated",
+		},
+		{
+			name: "bundle contains incorrect size",
+			bytes: []byte{
+				35, 98, 117, 110, 100, 108, 101, 0, // #bundle
+				0, 0, 0, 0, 0, 0, 0, 0, // time tag
+				0, 0, 0, 100, // content size of 100 but only 10 bytes of content
+				35, 35, 35, 35, 35, 35, 35, 35, 35, 35},
+			errorString: "bundle doesn't have enough bytes for the content size it specifies",
+		},
+		{
+			name: "bundle doesn't contain message or bundle",
+			bytes: []byte{
+				35, 98, 117, 110, 100, 108, 101, 0, // #bundle
+				0, 0, 0, 0, 0, 0, 0, 0, // time tag
+				0, 0, 0, 10,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			errorString: "bundle contents does not look a bundle or message",
+		},
+	}
 
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got, _, err := BundleFromBytes(testCase.bytes)
+
+			if err == nil {
+				t.Fatalf("BundleFromBytes expected to fail but got: %+v", got)
+			}
+
+			if err.Error() != testCase.errorString {
+				t.Fatalf("BundleFromBytes got error '%s', expected '%s'", err.Error(), testCase.errorString)
+			}
+		})
 	}
 }
