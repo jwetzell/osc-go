@@ -34,11 +34,11 @@ func (b *OSCBundle) ToBytes() ([]byte, error) {
 
 func BundleFromBytes(bytes []byte) (*OSCBundle, []byte, error) {
 	if len(bytes) < 20 {
-		return nil, bytes, errors.New("bundle has to be at least 20 bytes")
+		return nil, bytes, errors.New("OSC Bundle has to be at least 20 bytes")
 	}
 
 	if bytes[0] != 35 {
-		return nil, bytes, errors.New("bundle must start with a #")
+		return nil, bytes, errors.New("OSC Bundle must start with a #")
 	}
 
 	bundleHeader, bytesAfterBundleHeader, err := readOSCString(bytes)
@@ -48,7 +48,7 @@ func BundleFromBytes(bytes []byte) (*OSCBundle, []byte, error) {
 	}
 
 	if bundleHeader != "#bundle" {
-		return nil, bytesAfterBundleHeader, errors.New("bundle must start with #bundle string")
+		return nil, bytesAfterBundleHeader, errors.New("OSC Bundle must start with #bundle string")
 	}
 
 	timeTag, bytesAfterTimeTag, err := readOSCTimeTag(bytesAfterBundleHeader)
