@@ -284,7 +284,7 @@ func readOSCString(bytes []byte) (string, []byte, error) {
 
 func readOSCInt32(bytes []byte) (int32, []byte, error) {
 	if len(bytes) < 4 {
-		return 0, bytes, errors.New("int data must be at least 4 bytes large")
+		return 0, bytes, errors.New("OSC int32 arg is not 4 bytes")
 	}
 	bits := binary.BigEndian.Uint32(bytes[0:4])
 	return int32(bits), bytes[4:], nil
@@ -292,7 +292,7 @@ func readOSCInt32(bytes []byte) (int32, []byte, error) {
 
 func readOSCInt64(bytes []byte) (int64, []byte, error) {
 	if len(bytes) < 8 {
-		return 0, bytes, errors.New("int data must be at least 4 bytes large")
+		return 0, bytes, errors.New("OSC int64 arg is not 8 bytes")
 	}
 	bits := binary.BigEndian.Uint64(bytes[0:8])
 	return int64(bits), bytes[8:], nil
@@ -300,7 +300,7 @@ func readOSCInt64(bytes []byte) (int64, []byte, error) {
 
 func readOSCFloat32(bytes []byte) (float32, []byte, error) {
 	if len(bytes) < 4 {
-		return 0, bytes, errors.New("float data must be at least 4 bytes large")
+		return 0, bytes, errors.New("OSC float32 arg is not 4 bytes")
 	}
 	bits := binary.BigEndian.Uint32(bytes[0:4])
 	return math.Float32frombits(bits), bytes[4:], nil
@@ -308,7 +308,7 @@ func readOSCFloat32(bytes []byte) (float32, []byte, error) {
 
 func readOSCFloat64(bytes []byte) (float64, []byte, error) {
 	if len(bytes) < 4 {
-		return 0, bytes, errors.New("float data must be at least 4 bytes large")
+		return 0, bytes, errors.New("OSC float64 arg is not 8 bytes")
 	}
 	bits := binary.BigEndian.Uint64(bytes[0:8])
 	return math.Float64frombits(bits), bytes[8:], nil
@@ -318,11 +318,11 @@ func readOSCBlob(bytes []byte) ([]byte, []byte, error) {
 	blobLength, remainingBytes, err := readOSCInt32(bytes)
 
 	if err != nil {
-		return []byte{}, bytes, errors.New("problem reading blob data size")
+		return []byte{}, bytes, errors.New("OSC blob arg size not valid: " + err.Error())
 	}
 
 	if len(remainingBytes) < int(blobLength) {
-		return []byte{}, bytes, errors.New("blob data specified a size larger than the remaining message data")
+		return []byte{}, bytes, errors.New("OSC blob arg size not valid: size specified is larger than remaining bytes")
 	}
 
 	blobLengthPadding := 4 - (blobLength % 4)
