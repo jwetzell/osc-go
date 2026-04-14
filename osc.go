@@ -336,7 +336,7 @@ func readOSCBlob(bytes []byte) ([]byte, []byte, error) {
 
 func readOSCColor(bytes []byte) (OSCColor, []byte, error) {
 	if len(bytes) < 4 {
-		return OSCColor{0, 0, 0, 0}, bytes, errors.New("color data must be at least 4 bytes large")
+		return OSCColor{0, 0, 0, 0}, bytes, errors.New("OSC color arg is not 4 bytes")
 	}
 	oscColor := OSCColor{
 		r: bytes[0],
@@ -346,14 +346,15 @@ func readOSCColor(bytes []byte) (OSCColor, []byte, error) {
 	}
 	return oscColor, bytes[4:], nil
 }
+
 func readOSCTimeTag(bytes []byte) (OSCTimeTag, []byte, error) {
 	seconds, bytesAfterSeconds, err := readOSCInt32(bytes)
 	if err != nil {
-		return OSCTimeTag{}, bytes, err
+		return OSCTimeTag{}, bytes, fmt.Errorf("OSC time tag seconds are not valid: %s", err)
 	}
 	fractionalSeconds, remainingBytes, err := readOSCInt32(bytesAfterSeconds)
 	if err != nil {
-		return OSCTimeTag{}, bytes, err
+		return OSCTimeTag{}, bytes, fmt.Errorf("OSC time tag fractional seconds are not valid: %s", err)
 	}
 
 	return OSCTimeTag{
