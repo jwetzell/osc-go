@@ -425,6 +425,48 @@ func TestBadOSCMessageDecoding(t *testing.T) {
 			},
 			errorString: "OSC string is not properly padded",
 		},
+		{
+			name: "int32 arg not 4 bytes",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 105, 0, 0, 0,
+			},
+			errorString: "OSC int32 arg is not 4 bytes",
+		},
+		{
+			name: "int64 arg not 8 bytes",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 104, 0, 0, 0, 0, 0, 0,
+			},
+			errorString: "OSC int64 arg is not 8 bytes",
+		},
+		{
+			name: "float32 arg not 4 bytes",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 102, 0, 0, 66,
+			},
+			errorString: "OSC float32 arg is not 4 bytes",
+		},
+		{
+			name: "float64 arg not 8 bytes",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 100, 0, 0, 0,
+			},
+			errorString: "OSC float64 arg is not 8 bytes",
+		},
+		{
+			name: "blob arg size not valid",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 98, 0, 0, 0, 0, 0,
+			},
+			errorString: "OSC blob arg size not valid: OSC int32 arg is not 4 bytes",
+		},
+		{
+			name: "blob arg size mismatch",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 98, 0, 0, 0, 0, 0, 4, 98, 108, 111,
+			},
+			errorString: "OSC blob arg size not valid: size specified is larger than remaining bytes",
+		},
 	}
 
 	for _, testCase := range testCases {
