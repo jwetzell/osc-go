@@ -467,6 +467,34 @@ func TestBadOSCMessageDecoding(t *testing.T) {
 			},
 			errorString: "OSC blob arg size not valid: size specified is larger than remaining bytes",
 		},
+		{
+			name: "color arg not 4 bytes",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 114, 0, 0, 20, 21,
+			},
+			errorString: "OSC color arg is not 4 bytes",
+		},
+		{
+			name: "time tag arg seconds not complete",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 116, 0, 0, 0,
+			},
+			errorString: "OSC time tag seconds are not valid: OSC int32 arg is not 4 bytes",
+		},
+		{
+			name: "time tag arg fractional seconds not complete",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 116, 0, 0, 0, 32, 0, 0, 0,
+			},
+			errorString: "OSC time tag fractional seconds are not valid: OSC int32 arg is not 4 bytes",
+		},
+		{
+			name: "unknown arg type",
+			bytes: []byte{
+				47, 104, 101, 108, 108, 111, 0, 0, 44, 120, 0, 0,
+			},
+			errorString: "unsupported OSC argument type: x",
+		},
 	}
 
 	for _, testCase := range testCases {
