@@ -51,7 +51,19 @@ func TestBadOSCBundleEncoding(t *testing.T) {
 		name        string
 		bundle      *OSCBundle
 		errorString string
-	}{}
+	}{
+		{
+			name: "bundle contains message with bad address",
+			bundle: &OSCBundle{
+				TimeTag: OSCTimeTag{
+					seconds:           32,
+					fractionalSeconds: 0,
+				},
+				Contents: []OSCPacket{&OSCMessage{Address: "hello", Args: []OSCArg{}}},
+			},
+			errorString: "OSC Message address must start with /",
+		},
+	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
