@@ -134,10 +134,28 @@ func TestBadOSCBundleDecoding(t *testing.T) {
 		},
 		{
 			name: "bundle header not properly null terminated",
-			bytes: []byte{35, 98, 117, 110, 100, 108, 101, 35, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0},
-			errorString: "OSC Bundle must start with #bundle string",
+			bytes: []byte{
+				35, 98, 117, 110, 100, 108, 101,
+				35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35},
+			errorString: "OSC string must be null-terminated",
+		},
+		{
+			name: "bundle contains incorrect size",
+			bytes: []byte{
+				35, 98, 117, 110, 100, 108, 101, 0, // #bundle
+				0, 0, 0, 0, 0, 0, 0, 0, // time tag
+				0, 0, 0, 100, // content size of 100 but only 10 bytes of content
+				35, 35, 35, 35, 35, 35, 35, 35, 35, 35},
+			errorString: "bundle doesn't have enough bytes for the content size it specifies",
+		},
+		{
+			name: "bundle doesn't contain message or bundle",
+			bytes: []byte{
+				35, 98, 117, 110, 100, 108, 101, 0, // #bundle
+				0, 0, 0, 0, 0, 0, 0, 0, // time tag
+				0, 0, 0, 10,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			errorString: "bundle contents does not look a bundle or message",
 		},
 	}
 
