@@ -2,7 +2,6 @@ package osc
 
 // TODO(jwetzell): split things up
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -27,39 +26,37 @@ func stringToOSCBytes(rawString string) []byte {
 }
 
 func int32ToOSCBytes(number int32) ([]byte, error) {
-	var buf bytes.Buffer
-	err := binary.Write(&buf, binary.BigEndian, number)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
+	bytes := make([]byte, 4)
+	bytes[0] = byte((number >> 24) & 0xFF)
+	bytes[1] = byte((number >> 16) & 0xFF)
+	bytes[2] = byte((number >> 8) & 0xFF)
+	bytes[3] = byte(number & 0xFF)
+	return bytes, nil
 }
 
 func int64ToOSCBytes(number int64) ([]byte, error) {
-	var buf bytes.Buffer
-	err := binary.Write(&buf, binary.BigEndian, number)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
+	bytes := make([]byte, 8)
+	bytes[0] = byte((number >> 56) & 0xFF)
+	bytes[1] = byte((number >> 48) & 0xFF)
+	bytes[2] = byte((number >> 40) & 0xFF)
+	bytes[3] = byte((number >> 32) & 0xFF)
+	bytes[4] = byte((number >> 24) & 0xFF)
+	bytes[5] = byte((number >> 16) & 0xFF)
+	bytes[6] = byte((number >> 8) & 0xFF)
+	bytes[7] = byte(number & 0xFF)
+	return bytes, nil
 }
 
 func float32ToOSCBytes(number float32) ([]byte, error) {
-	var buf bytes.Buffer
-	err := binary.Write(&buf, binary.BigEndian, number)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
+	bytes := make([]byte, 4)
+	binary.BigEndian.PutUint32(bytes, math.Float32bits(number))
+	return bytes, nil
 }
 
 func float64ToOSCBytes(number float64) ([]byte, error) {
-	var buf bytes.Buffer
-	err := binary.Write(&buf, binary.BigEndian, number)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
+	bytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(bytes, math.Float64bits(number))
+	return bytes, nil
 }
 
 func byteArrayToOSCBytes(bytes []byte) ([]byte, error) {
@@ -102,7 +99,7 @@ func argsToBuffer(args []OSCArg) ([]byte, error) {
 	var argBuffers = []byte{}
 
 	for _, arg := range args {
-		switch oscType := arg.Type; oscType {
+		switch arg.Type {
 		case "s":
 			if value, ok := arg.Value.(string); ok {
 				argBuffers = append(argBuffers, stringToOSCBytes(value)...)
@@ -243,7 +240,7 @@ func argsToBuffer(args []OSCArg) ([]byte, error) {
 				return nil, errors.New("OSC arg had float64 type but non-number value")
 			}
 		default:
-			return nil, fmt.Errorf("unsupported OSC argument type: %s", oscType)
+			return nil, fmt.Errorf("unsupported OSC argument type: %s", arg.Type)
 		}
 	}
 	return argBuffers, nil
