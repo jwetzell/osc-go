@@ -8,10 +8,7 @@ func (b *OSCBundle) ToBytes() ([]byte, error) {
 
 	bytes := stringToOSCBytes("#bundle")
 
-	timeTagBytes, err := timeTagToOSCBytes(b.TimeTag)
-	if err != nil {
-		return nil, err
-	}
+	timeTagBytes := timeTagToOSCBytes(b.TimeTag)
 	bytes = append(bytes, timeTagBytes...)
 
 	for _, packet := range b.Contents {
@@ -21,10 +18,7 @@ func (b *OSCBundle) ToBytes() ([]byte, error) {
 		}
 		packetLength := len(packetBytes)
 
-		packetLengthBytes, err := int32ToOSCBytes(int32(packetLength))
-		if err != nil {
-			return nil, err
-		}
+		packetLengthBytes := int32ToOSCBytes(int32(packetLength))
 		bytes = append(bytes, packetLengthBytes...)
 		bytes = append(bytes, packetBytes...)
 	}
