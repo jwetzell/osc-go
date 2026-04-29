@@ -440,8 +440,7 @@ func readOSCArg(bytes []byte, oscType string) (OSCArg, []byte, error) {
 		oscArg.Value = argTimeTag
 		remainingBytes = bytesLeft
 	default:
-		fmt.Printf("unsupported osc type: %s\n", oscType)
-		readArgError = errors.New("unsupported OSC argument type: " + oscType)
+		return OSCArg{}, bytes, fmt.Errorf("unsupported OSC argument type: %s", oscType)
 	}
 	return oscArg, remainingBytes, readArgError
 }
