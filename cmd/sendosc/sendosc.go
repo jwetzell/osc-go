@@ -161,8 +161,7 @@ func argToTypedArg(rawArg string, oscType string) osc.OSCArg {
 			Type:  "N",
 		}
 	default:
-		fmt.Print("unhandled osc type: ")
-		fmt.Printf("%s.\n", oscType)
+		fmt.Printf("unsupported OSC arg type: %s\n", oscType)
 		// TODO(jwetzell): something better than this like actual nil, err thing
 		return osc.OSCArg{}
 	}
