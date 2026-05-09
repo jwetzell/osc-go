@@ -222,7 +222,7 @@ func send(host string, port int32, address string, args []string, types []string
 		oscMessageBuffer = append(sizeBytes, oscMessageBuffer...)
 	}
 
-	netAddress := fmt.Sprintf("%s:%d", host, port)
+	netAddress := net.JoinHostPort(host, fmt.Sprintf("%d", port))
 	conn, err := net.Dial(protocol, netAddress)
 	if err != nil {
 		fmt.Printf("Dial err %v", err)

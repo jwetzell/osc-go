@@ -17,7 +17,7 @@ func stringToOSCBytes(rawString string) []byte {
 
 	padLength := 4 - (len(sb.String()) % 4)
 	if padLength < 4 {
-		for i := 0; i < padLength; i++ {
+		for range padLength {
 			sb.WriteString("\u0000")
 		}
 	}
@@ -69,7 +69,7 @@ func byteArrayToOSCBytes(bytes []byte) []byte {
 
 	padLength := 4 - (bytesSize % 4)
 	if padLength < 4 {
-		for i := 0; i < padLength; i++ {
+		for range padLength {
 			oscBytes = append(oscBytes, 0)
 		}
 	}
