@@ -12,33 +12,25 @@ import (
 )
 
 func main() {
-	var IP string
-	var Port int32
-	var Protocol string
-	var Format string
-	var Slip bool
 
 	cmd := &cli.Command{
 		Name:  "receiveosc",
 		Usage: "receive OSC messages via UDP or TCP",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:        "ip",
-				Usage:       "ip to receive OSC messages on",
-				Value:       "0.0.0.0",
-				Destination: &IP,
+				Name:  "ip",
+				Usage: "ip to receive OSC messages on",
+				Value: "0.0.0.0",
 			},
 			&cli.Int32Flag{
-				Name:        "port",
-				Usage:       "port to receive OSC messages on",
-				Destination: &Port,
-				Value:       8888,
+				Name:  "port",
+				Usage: "port to receive OSC messages on",
+				Value: 8888,
 			},
 			&cli.StringFlag{
-				Name:        "protocol",
-				Usage:       "protocol to use to receive (tcp or udp)",
-				Value:       "udp",
-				Destination: &Protocol,
+				Name:  "protocol",
+				Usage: "protocol to use to receive (tcp or udp)",
+				Value: "udp",
 				Validator: func(flag string) error {
 					if flag != "udp" && flag != "tcp" {
 						return fmt.Errorf("protocol must be either 'udp' or 'tcp'")
@@ -47,10 +39,9 @@ func main() {
 				},
 			},
 			&cli.StringFlag{
-				Name:        "format",
-				Usage:       "format for messages to be output in ('json')",
-				Value:       "json",
-				Destination: &Format,
+				Name:  "format",
+				Usage: "format for messages to be output in ('json')",
+				Value: "json",
 				Validator: func(flag string) error {
 					if flag != "json" {
 						return fmt.Errorf("format must be 'json'")
@@ -59,22 +50,27 @@ func main() {
 				},
 			},
 			&cli.BoolFlag{
-				Name:        "slip",
-				Value:       false,
-				Usage:       "whether to slip encode the OSC Message bytes",
-				Destination: &Slip,
+				Name:  "slip",
+				Value: false,
+				Usage: "whether to slip encode the OSC Message bytes",
 			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			netAddress := fmt.Sprintf("%s:%d", IP, Port)
-			switch Protocol {
+			ip := cmd.String("ip")
+			port := cmd.Int32("port")
+			protocol := cmd.String("protocol")
+			format := cmd.String("format")
+			slip := cmd.Bool("slip")
+
+			netAddress := fmt.Sprintf("%s:%d", ip, port)
+			switch protocol {
 			case "udp":
-				listenUDP(netAddress, Format)
+				listenUDP(netAddress, format)
 			case "tcp":
-				if !Slip {
+				if !slip {
 					return fmt.Errorf("OSC 1.0 over TCP is not supported yet")
 				}
-				listenTCP(netAddress, Slip, Format)
+				listenTCP(netAddress, slip, format)
 			}
 			return nil
 		},

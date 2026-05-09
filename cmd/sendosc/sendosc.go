@@ -15,35 +15,25 @@ import (
 )
 
 func main() {
-	var Host string
-	var Port int32
-	var Address string
-	var Protocol string
-	var Args []string
-	var Types []string
-	var Slip bool
 
 	cmd := &cli.Command{
 		Name:  "sendosc",
 		Usage: "send OSC messages via UDP or TCP",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:        "host",
-				Usage:       "host to send OSC message to",
-				Destination: &Host,
-				Required:    true,
+				Name:     "host",
+				Usage:    "host to send OSC message to",
+				Required: true,
 			},
 			&cli.Int32Flag{
-				Name:        "port",
-				Usage:       "port to send OSC message to",
-				Destination: &Port,
-				Required:    true,
+				Name:     "port",
+				Usage:    "port to send OSC message to",
+				Required: true,
 			},
 			&cli.StringFlag{
-				Name:        "protocol",
-				Usage:       "protocol to use to send (tcp or udp)",
-				Value:       "udp",
-				Destination: &Protocol,
+				Name:  "protocol",
+				Usage: "protocol to use to send (tcp or udp)",
+				Value: "udp",
 				Validator: func(flag string) error {
 					if flag != "udp" && flag != "tcp" {
 						return fmt.Errorf("protocol must be either 'udp' or 'tcp'")
@@ -52,32 +42,35 @@ func main() {
 				},
 			},
 			&cli.StringFlag{
-				Name:        "address",
-				Usage:       "OSC address",
-				Destination: &Address,
-				Required:    true,
+				Name:     "address",
+				Usage:    "OSC address",
+				Required: true,
 			},
 			&cli.StringSliceFlag{
-				Name:        "arg",
-				Usage:       "OSC args",
-				Value:       []string{},
-				Destination: &Args,
+				Name:  "arg",
+				Usage: "OSC args",
+				Value: []string{},
 			},
 			&cli.StringSliceFlag{
-				Name:        "type",
-				Usage:       "OSC types",
-				Value:       []string{},
-				Destination: &Types,
+				Name:  "type",
+				Usage: "OSC types",
+				Value: []string{},
 			},
 			&cli.BoolFlag{
-				Name:        "slip",
-				Value:       false,
-				Usage:       "whether to slip encode the OSC Message bytes",
-				Destination: &Slip,
+				Name:  "slip",
+				Value: false,
+				Usage: "whether to slip encode the OSC Message bytes",
 			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			send(Host, Port, Address, Args, Types, Protocol, Slip)
+			host := cmd.String("host")
+			port := cmd.Int32("port")
+			address := cmd.String("address")
+			args := cmd.StringSlice("arg")
+			types := cmd.StringSlice("type")
+			protocol := cmd.String("protocol")
+			slip := cmd.Bool("slip")
+			send(host, port, address, args, types, protocol, slip)
 			return nil
 		},
 	}

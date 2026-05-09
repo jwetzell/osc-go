@@ -12,41 +12,37 @@ import (
 )
 
 func main() {
-	var Address string
-	var Args []string
-	var Types []string
-	var Slip bool
 
 	cmd := &cli.Command{
 		Name:  "makeosc",
 		Usage: "make osc bytes",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:        "address",
-				Value:       "",
-				Usage:       "OSC address",
-				Destination: &Address,
-				Required:    true,
+				Name:     "address",
+				Value:    "",
+				Usage:    "OSC address",
+				Required: true,
 			},
 			&cli.StringSliceFlag{
-				Name:        "arg",
-				Usage:       "OSC args",
-				Destination: &Args,
+				Name:  "arg",
+				Usage: "OSC args",
 			},
 			&cli.StringSliceFlag{
-				Name:        "type",
-				Usage:       "OSC types",
-				Destination: &Types,
+				Name:  "type",
+				Usage: "OSC types",
 			},
 			&cli.BoolFlag{
-				Name:        "slip",
-				Value:       false,
-				Usage:       "whether to slip encode the OSC Message bytes",
-				Destination: &Slip,
+				Name:  "slip",
+				Value: false,
+				Usage: "whether to slip encode the OSC Message bytes",
 			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			make(Address, Args, Types, Slip)
+			address := cmd.String("address")
+			args := cmd.StringSlice("arg")
+			types := cmd.StringSlice("type")
+			slip := cmd.Bool("slip")
+			makeMsg(address, args, types, slip)
 			return nil
 		},
 	}
@@ -158,7 +154,7 @@ func slipEncode(bytes []byte) []byte {
 	return encodedBytes
 }
 
-func make(address string, args []string, types []string, slip bool) {
+func makeMsg(address string, args []string, types []string, slip bool) {
 
 	oscMessage := osc.OSCMessage{
 		Address: address,
