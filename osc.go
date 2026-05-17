@@ -311,7 +311,7 @@ func readOSCArg(bytes []byte, oscType string) (OSCArg, []byte, error) {
 	oscArg := OSCArg{}
 	oscArg.Type = oscType
 
-	remainingBytes := []byte{}
+	var remainingBytes []byte
 	//TODO(jwetzell): add error handling
 	switch oscType {
 	case "s":

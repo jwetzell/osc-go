@@ -72,19 +72,20 @@ func BundleFromBytes(bytes []byte) (*OSCBundle, []byte, error) {
 
 		bundleContentBytes := remainingBytes[0:contentSize]
 
-		if bundleContentBytes[0] == 35 {
+		switch bundleContentBytes[0] {
+		case 35: // #
 			content, _, err := BundleFromBytes(bundleContentBytes)
 			if err != nil {
 				return nil, remainingBytes, err
 			}
 			bundleContents = append(bundleContents, content)
-		} else if bundleContentBytes[0] == 47 {
+		case 47: // /
 			content, err := MessageFromBytes(bundleContentBytes)
 			if err != nil {
 				return nil, remainingBytes, err
 			}
 			bundleContents = append(bundleContents, content)
-		} else {
+		default:
 			return nil, remainingBytes, errors.New("bundle contents does not look a bundle or message")
 		}
 		remainingBytes = bytesAfterContentSize[contentSize:]

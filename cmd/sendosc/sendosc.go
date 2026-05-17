@@ -169,11 +169,12 @@ func slipEncode(bytes []byte) []byte {
 	var encodedBytes = []byte{END}
 
 	for _, byteToEncode := range bytes {
-		if byteToEncode == END {
+		switch byteToEncode {
+		case END:
 			encodedBytes = append(encodedBytes, ESC, ESC_END)
-		} else if byteToEncode == ESC {
+		case ESC:
 			encodedBytes = append(encodedBytes, ESC, ESC_ESC)
-		} else {
+		default:
 			encodedBytes = append(encodedBytes, byteToEncode)
 		}
 	}

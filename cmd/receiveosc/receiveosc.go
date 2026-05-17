@@ -120,9 +120,10 @@ func (s *SLIP) decode(bytes []byte) {
 		}
 
 		if escapeNext {
-			if packetByte == ESC_END {
+			switch packetByte {
+			case ESC_END:
 				s.pendingBytes = append(s.pendingBytes, END)
-			} else if packetByte == ESC_ESC {
+			case ESC_ESC:
 				s.pendingBytes = append(s.pendingBytes, ESC)
 			}
 			escapeNext = false
