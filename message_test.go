@@ -511,3 +511,46 @@ func TestBadOSCMessageDecoding(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkMessageToBytes(b *testing.B) {
+	message := &OSCMessage{
+		Address: "/hello",
+		Args: []OSCArg{
+			{Type: "i", Value: 35},
+		},
+	}
+
+	for b.Loop() {
+		_, err := message.ToBytes()
+		if err != nil {
+			b.Fatalf("failed to encode properly: %s", err.Error())
+		}
+	}
+}
+
+func BenchmarkMessageFromBytes(b *testing.B) {
+	bytes := []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 105, 0, 0, 0, 0, 0, 35}
+
+	for b.Loop() {
+		_, err := MessageFromBytes(bytes)
+		if err != nil {
+			b.Fatalf("failed to decode properly: %s", err.Error())
+		}
+	}
+}
+
+func FuzzMessageFromBytes(f *testing.F) {
+	seedBytes := [][]byte{
+		{},
+		{47, 104, 101, 108, 108, 111, 0, 0},
+		{47, 104, 101, 108, 108, 111, 0, 0, 44, 105, 0, 0, 0, 0, 0, 35},
+	}
+
+	for _, seed := range seedBytes {
+		f.Add(seed)
+	}
+
+	f.Fuzz(func(t *testing.T, data []byte) {
+		_, _ = MessageFromBytes(data)
+	})
+}
