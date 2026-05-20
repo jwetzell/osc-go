@@ -247,7 +247,7 @@ func readOSCFloat32(bytes []byte) (float32, []byte, error) {
 }
 
 func readOSCFloat64(bytes []byte) (float64, []byte, error) {
-	if len(bytes) < 4 {
+	if len(bytes) < 8 {
 		return 0, bytes, errors.New("OSC float64 arg is not 8 bytes")
 	}
 	bits := binary.BigEndian.Uint64(bytes[0:8])
@@ -261,6 +261,10 @@ func readOSCBlob(bytes []byte) ([]byte, []byte, error) {
 		return []byte{}, bytes, errors.New("OSC blob arg size not valid: " + err.Error())
 	}
 
+	if blobLength < 0 {
+		return []byte{}, bytes, errors.New("OSC blob arg size not valid: size cannot be negative")
+	}
+
 	if len(remainingBytes) < int(blobLength) {
 		return []byte{}, bytes, errors.New("OSC blob arg size not valid: size specified is larger than remaining bytes")
 	}
@@ -270,6 +274,9 @@ func readOSCBlob(bytes []byte) ([]byte, []byte, error) {
 
 	if blobLengthPadding < 4 {
 		blobEnd = blobEnd + blobLengthPadding
+	}
+	if int(blobEnd) > len(bytes) {
+		return []byte{}, bytes, errors.New("OSC blob arg size not valid: size specified is larger than remaining bytes when accounting for padding")
 	}
 	return bytes[4 : 4+blobLength], bytes[blobEnd:], nil
 }
