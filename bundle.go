@@ -66,6 +66,10 @@ func BundleFromBytes(bytes []byte) (*OSCBundle, []byte, error) {
 
 		remainingBytes = bytesAfterContentSize
 
+		if contentSize <= 0 {
+			return nil, remainingBytes, errors.New("bundle content size must be positive")
+		}
+
 		if len(remainingBytes) < int(contentSize) {
 			return nil, remainingBytes, errors.New("bundle doesn't have enough bytes for the content size it specifies")
 		}
