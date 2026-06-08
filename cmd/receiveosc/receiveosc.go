@@ -204,23 +204,23 @@ func handleBundle(bundle *osc.OSCBundle, format string) {
 
 func listenUDP(netAddress string, format string) {
 
-	s, err := net.ResolveUDPAddr("udp4", netAddress)
+	laddr, err := net.ResolveUDPAddr("udp4", netAddress)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	connection, err := net.ListenUDP("udp4", s)
+	conn, err := net.ListenUDP("udp4", laddr)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	defer connection.Close()
+	defer conn.Close()
 	buffer := make([]byte, 1024)
 
 	for {
-		bytesRead, _, err := connection.ReadFromUDP(buffer)
+		bytesRead, _, err := conn.ReadFromUDP(buffer)
 
 		if err != nil {
 			panic(err)
