@@ -292,13 +292,25 @@ func TestBadPacketFromBytes(t *testing.T) {
 		bytes       []byte
 		errorString string
 	}{
-		{name: "empty bytes",
+		{
+			name:        "empty bytes",
 			bytes:       []byte{},
 			errorString: "cannot create OSC Packet from empty byte array",
 		},
-		{name: "packet that does not start with / or #",
+		{
+			name:        "packet that does not start with / or #",
 			bytes:       []byte{0, 1, 2, 3},
 			errorString: "OSC Packet must start with # for bundle or / for message",
+		},
+		{
+			name:        "bundle with not enough bytes",
+			bytes:       []byte{35, 98, 117, 110, 100, 108, 101, 0},
+			errorString: "OSC Bundle has to be at least 20 bytes",
+		},
+		{
+			name:        "message without null terminated address",
+			bytes:       []byte{47, 104, 101, 108, 108, 111},
+			errorString: "OSC string must be null-terminated",
 		},
 	}
 
