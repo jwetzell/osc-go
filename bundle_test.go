@@ -194,6 +194,24 @@ func TestBadOSCBundleDecoding(t *testing.T) {
 				0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			errorString: "bundle contents does not look a bundle or message",
 		},
+		{
+			name: "bundle with bad bundle inside",
+			bytes: []byte{35, 98, 117, 110, 100, 108, 101, 0, // #bundle
+				0, 0, 0, 32, 0, 0, 0, 0, // time tag
+				0, 0, 0, 19, // content size
+				35, 98, 117, 110, 100, 108, 101, 0, // #bundle
+				0, 0, 0, 64, 0, 0, 0, 0, // time tag
+				0, 0, 0},
+			errorString: "OSC Bundle has to be at least 20 bytes",
+		},
+		{
+			name: "bundle with bad message inside",
+			bytes: []byte{35, 98, 117, 110, 100, 108, 101, 0, // #bundle
+				0, 0, 0, 32, 0, 0, 0, 0, // time tag
+				0, 0, 0, 5, // content size
+				47, 104, 101, 108, 108, 111},
+			errorString: "OSC string must be null-terminated",
+		},
 	}
 
 	for _, testCase := range testCases {

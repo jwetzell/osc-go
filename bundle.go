@@ -45,59 +45,43 @@ func BundleFromBytes(bytes []byte) (*OSCBundle, []byte, error) {
 		return nil, bytesAfterBundleHeader, errors.New("OSC Bundle must start with #bundle string")
 	}
 
-	timeTag, bytesAfterTimeTag, err := readOSCTimeTag(bytesAfterBundleHeader)
-
-	if err != nil {
-		return nil, bytesAfterBundleHeader, err
-	}
+	timeTag, bytesAfterTimeTag, _ := readOSCTimeTag(bytesAfterBundleHeader)
 
 	bundleContents := []OSCPacket{}
 
-	endOfBundle := false
-
 	remainingBytes := bytesAfterTimeTag
 
-	for !endOfBundle {
-		contentSize, bytesAfterContentSize, err := readOSCInt32(remainingBytes)
+	contentSize, bytesAfterContentSize, _ := readOSCInt32(remainingBytes)
 
+	remainingBytes = bytesAfterContentSize
+
+	if contentSize <= 0 {
+		return nil, remainingBytes, errors.New("bundle content size must be positive")
+	}
+
+	if len(remainingBytes) < int(contentSize) {
+		return nil, remainingBytes, errors.New("bundle doesn't have enough bytes for the content size it specifies")
+	}
+
+	bundleContentBytes := remainingBytes[0:contentSize]
+
+	switch bundleContentBytes[0] {
+	case 35: // #
+		content, _, err := BundleFromBytes(bundleContentBytes)
 		if err != nil {
 			return nil, remainingBytes, err
 		}
-
-		remainingBytes = bytesAfterContentSize
-
-		if contentSize <= 0 {
-			return nil, remainingBytes, errors.New("bundle content size must be positive")
+		bundleContents = append(bundleContents, content)
+	case 47: // /
+		content, err := MessageFromBytes(bundleContentBytes)
+		if err != nil {
+			return nil, remainingBytes, err
 		}
-
-		if len(remainingBytes) < int(contentSize) {
-			return nil, remainingBytes, errors.New("bundle doesn't have enough bytes for the content size it specifies")
-		}
-
-		bundleContentBytes := remainingBytes[0:contentSize]
-
-		switch bundleContentBytes[0] {
-		case 35: // #
-			content, _, err := BundleFromBytes(bundleContentBytes)
-			if err != nil {
-				return nil, remainingBytes, err
-			}
-			bundleContents = append(bundleContents, content)
-		case 47: // /
-			content, err := MessageFromBytes(bundleContentBytes)
-			if err != nil {
-				return nil, remainingBytes, err
-			}
-			bundleContents = append(bundleContents, content)
-		default:
-			return nil, remainingBytes, errors.New("bundle contents does not look a bundle or message")
-		}
-		remainingBytes = bytesAfterContentSize[contentSize:]
-		if len(remainingBytes) == 0 {
-			endOfBundle = true
-		}
-
+		bundleContents = append(bundleContents, content)
+	default:
+		return nil, remainingBytes, errors.New("bundle contents does not look a bundle or message")
 	}
+	remainingBytes = bytesAfterContentSize[contentSize:]
 
 	return &OSCBundle{
 			TimeTag:  timeTag,
