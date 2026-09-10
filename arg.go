@@ -39,3 +39,7 @@ func Int64Arg(value int64) Arg {
 func DoubleArg(value float64) Arg {
 	return Arg{Type: "d", Value: value}
 }
+
+func TimeTagArg(seconds, fractional int32) Arg {
+	return Arg{Type: "t", Value: TimeTag{seconds: seconds, fractionalSeconds: fractional}}
+}
