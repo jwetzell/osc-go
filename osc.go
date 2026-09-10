@@ -77,7 +77,7 @@ func byteArrayToOSCBytes(bytes []byte) []byte {
 	return oscBytes
 }
 
-func timeTagToOSCBytes(timeTag OSCTimeTag) []byte {
+func timeTagToOSCBytes(timeTag TimeTag) []byte {
 	timeTagBytes := int32ToOSCBytes(timeTag.seconds)
 	fractionalSecondsBytes := int32ToOSCBytes(timeTag.fractionalSeconds)
 	timeTagBytes = append(timeTagBytes, fractionalSecondsBytes...)
@@ -85,7 +85,7 @@ func timeTagToOSCBytes(timeTag OSCTimeTag) []byte {
 	return timeTagBytes
 }
 
-func argsToBuffer(args []OSCArg) ([]byte, error) {
+func argsToBuffer(args []Arg) ([]byte, error) {
 	//TODO(jwetzell): add error handling
 	var argBuffers = []byte{}
 
@@ -142,7 +142,7 @@ func argsToBuffer(args []OSCArg) ([]byte, error) {
 		case "I":
 			argBuffers = append(argBuffers, make([]byte, 0)...)
 		case "r":
-			color, ok := arg.Value.(OSCColor)
+			color, ok := arg.Value.(Color)
 			if !ok {
 				return nil, errors.New("OSC arg had color type but non-color value")
 			}
@@ -281,11 +281,11 @@ func readOSCBlob(bytes []byte) ([]byte, []byte, error) {
 	return bytes[4 : 4+blobLength], bytes[blobEnd:], nil
 }
 
-func readOSCColor(bytes []byte) (OSCColor, []byte, error) {
+func readOSCColor(bytes []byte) (Color, []byte, error) {
 	if len(bytes) < 4 {
-		return OSCColor{0, 0, 0, 0}, bytes, errors.New("OSC color arg is not 4 bytes")
+		return Color{0, 0, 0, 0}, bytes, errors.New("OSC color arg is not 4 bytes")
 	}
-	oscColor := OSCColor{
+	oscColor := Color{
 		r: bytes[0],
 		g: bytes[1],
 		b: bytes[2],
@@ -294,17 +294,17 @@ func readOSCColor(bytes []byte) (OSCColor, []byte, error) {
 	return oscColor, bytes[4:], nil
 }
 
-func readOSCTimeTag(bytes []byte) (OSCTimeTag, []byte, error) {
+func readOSCTimeTag(bytes []byte) (TimeTag, []byte, error) {
 	seconds, bytesAfterSeconds, err := readOSCInt32(bytes)
 	if err != nil {
-		return OSCTimeTag{}, bytes, fmt.Errorf("OSC time tag seconds are not valid: %s", err)
+		return TimeTag{}, bytes, fmt.Errorf("OSC time tag seconds are not valid: %s", err)
 	}
 	fractionalSeconds, remainingBytes, err := readOSCInt32(bytesAfterSeconds)
 	if err != nil {
-		return OSCTimeTag{}, bytes, fmt.Errorf("OSC time tag fractional seconds are not valid: %s", err)
+		return TimeTag{}, bytes, fmt.Errorf("OSC time tag fractional seconds are not valid: %s", err)
 	}
 
-	return OSCTimeTag{
+	return TimeTag{
 			seconds:           seconds,
 			fractionalSeconds: fractionalSeconds,
 		},
@@ -312,10 +312,10 @@ func readOSCTimeTag(bytes []byte) (OSCTimeTag, []byte, error) {
 		nil
 }
 
-func readOSCArg(bytes []byte, oscType string) (OSCArg, []byte, error) {
+func readOSCArg(bytes []byte, oscType string) (Arg, []byte, error) {
 	var readArgError error
 
-	oscArg := OSCArg{}
+	oscArg := Arg{}
 	oscArg.Type = oscType
 
 	var remainingBytes []byte
@@ -324,7 +324,7 @@ func readOSCArg(bytes []byte, oscType string) (OSCArg, []byte, error) {
 	case "s":
 		argString, bytesLeft, err := readOSCString(bytes)
 		if err != nil {
-			return OSCArg{}, bytes, err
+			return Arg{}, bytes, err
 		}
 		oscArg.Value = argString
 		remainingBytes = bytesLeft
@@ -390,12 +390,12 @@ func readOSCArg(bytes []byte, oscType string) (OSCArg, []byte, error) {
 		oscArg.Value = argTimeTag
 		remainingBytes = bytesLeft
 	default:
-		return OSCArg{}, bytes, fmt.Errorf("unsupported OSC argument type: %s", oscType)
+		return Arg{}, bytes, fmt.Errorf("unsupported OSC argument type: %s", oscType)
 	}
 	return oscArg, remainingBytes, readArgError
 }
 
-func PacketFromBytes(bytes []byte) (OSCPacket, []byte, error) {
+func PacketFromBytes(bytes []byte) (Packet, []byte, error) {
 	if len(bytes) == 0 {
 		return nil, bytes, errors.New("cannot create OSC Packet from empty byte array")
 	}

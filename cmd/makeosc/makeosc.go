@@ -52,11 +52,11 @@ func main() {
 	}
 }
 
-func argToTypedArg(rawArg string, oscType string) osc.OSCArg {
+func argToTypedArg(rawArg string, oscType string) osc.Arg {
 
 	switch oscType {
 	case "s":
-		return osc.OSCArg{
+		return osc.Arg{
 			Value: rawArg,
 			Type:  "s",
 		}
@@ -66,7 +66,7 @@ func argToTypedArg(rawArg string, oscType string) osc.OSCArg {
 			// ... handle error
 			panic(err)
 		}
-		return osc.OSCArg{
+		return osc.Arg{
 			Value: int32(number),
 			Type:  "i",
 		}
@@ -76,7 +76,7 @@ func argToTypedArg(rawArg string, oscType string) osc.OSCArg {
 			// ... handle error
 			panic(err)
 		}
-		return osc.OSCArg{
+		return osc.Arg{
 			Value: float32(number),
 			Type:  "f",
 		}
@@ -86,7 +86,7 @@ func argToTypedArg(rawArg string, oscType string) osc.OSCArg {
 			// ... handle error
 			panic(err)
 		}
-		return osc.OSCArg{
+		return osc.Arg{
 			Value: data,
 			Type:  "b",
 		}
@@ -96,7 +96,7 @@ func argToTypedArg(rawArg string, oscType string) osc.OSCArg {
 			// ... handle error
 			panic(err)
 		}
-		return osc.OSCArg{
+		return osc.Arg{
 			Value: int64(number),
 			Type:  "h",
 		}
@@ -106,29 +106,29 @@ func argToTypedArg(rawArg string, oscType string) osc.OSCArg {
 			// ... handle error
 			panic(err)
 		}
-		return osc.OSCArg{
+		return osc.Arg{
 			Value: float64(number),
 			Type:  "d",
 		}
 	case "T":
-		return osc.OSCArg{
+		return osc.Arg{
 			Value: true,
 			Type:  "T",
 		}
 	case "F":
-		return osc.OSCArg{
+		return osc.Arg{
 			Value: false,
 			Type:  "F",
 		}
 	case "N":
-		return osc.OSCArg{
+		return osc.Arg{
 			Value: nil,
 			Type:  "N",
 		}
 	default:
 		fmt.Printf("unsupported OSC arg type: %s\n", oscType)
 		// TODO(jwetzell): something better than this like actual nil, err thing
-		return osc.OSCArg{}
+		return osc.Arg{}
 	}
 }
 
@@ -157,9 +157,9 @@ func slipEncode(bytes []byte) []byte {
 
 func makeMsg(address string, args []string, types []string, slip bool) {
 
-	oscMessage := osc.OSCMessage{
+	oscMessage := osc.Message{
 		Address: address,
-		Args:    []osc.OSCArg{},
+		Args:    []osc.Arg{},
 	}
 
 	for index, arg := range args {

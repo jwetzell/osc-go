@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func (m *OSCMessage) ToBytes() ([]byte, error) {
+func (m *Message) ToBytes() ([]byte, error) {
 
 	if len(m.Address) == 0 {
 		return nil, errors.New("OSC Message must have an address")
@@ -36,7 +36,7 @@ func (m *OSCMessage) ToBytes() ([]byte, error) {
 	return oscBuffer, nil
 }
 
-func MessageFromBytes(bytes []byte) (*OSCMessage, error) {
+func MessageFromBytes(bytes []byte) (*Message, error) {
 	if len(bytes) == 0 {
 		return nil, errors.New("cannot create OSC Message from empty byte array")
 	}
@@ -50,9 +50,9 @@ func MessageFromBytes(bytes []byte) (*OSCMessage, error) {
 		return nil, err
 	}
 
-	oscMessage := OSCMessage{
+	oscMessage := Message{
 		Address: address,
-		Args:    []OSCArg{},
+		Args:    []Arg{},
 	}
 
 	if len(typeAndArgBytes) == 0 {

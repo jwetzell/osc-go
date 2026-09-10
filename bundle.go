@@ -4,7 +4,7 @@ import (
 	"errors"
 )
 
-func (b *OSCBundle) ToBytes() ([]byte, error) {
+func (b *Bundle) ToBytes() ([]byte, error) {
 
 	bytes := stringToOSCBytes("#bundle")
 
@@ -26,7 +26,7 @@ func (b *OSCBundle) ToBytes() ([]byte, error) {
 	return bytes, nil
 }
 
-func BundleFromBytes(bytes []byte) (*OSCBundle, []byte, error) {
+func BundleFromBytes(bytes []byte) (*Bundle, []byte, error) {
 	if len(bytes) < 20 {
 		return nil, bytes, errors.New("OSC Bundle has to be at least 20 bytes")
 	}
@@ -47,7 +47,7 @@ func BundleFromBytes(bytes []byte) (*OSCBundle, []byte, error) {
 
 	timeTag, bytesAfterTimeTag, _ := readOSCTimeTag(bytesAfterBundleHeader)
 
-	bundleContents := []OSCPacket{}
+	bundleContents := []Packet{}
 
 	remainingBytes := bytesAfterTimeTag
 
@@ -83,7 +83,7 @@ func BundleFromBytes(bytes []byte) (*OSCBundle, []byte, error) {
 	}
 	remainingBytes = bytesAfterContentSize[contentSize:]
 
-	return &OSCBundle{
+	return &Bundle{
 			TimeTag:  timeTag,
 			Contents: bundleContents,
 		},
