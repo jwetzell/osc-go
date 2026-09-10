@@ -1,32 +1,32 @@
 package osc
 
-type OSCPacket interface {
+type Packet interface {
 	ToBytes() ([]byte, error)
 }
 
-type OSCBundle struct {
-	Contents []OSCPacket `json:"contents"`
-	TimeTag  OSCTimeTag  `json:"timeTag"`
+type Bundle struct {
+	Contents []Packet `json:"contents"`
+	TimeTag  TimeTag  `json:"timeTag"`
 }
 
-type OSCArg struct {
+type Arg struct {
 	Value any    `json:"value"`
 	Type  string `json:"type"`
 }
 
-type OSCMessage struct {
-	Address string   `json:"address"`
-	Args    []OSCArg `json:"args"`
+type Message struct {
+	Address string `json:"address"`
+	Args    []Arg  `json:"args"`
 }
 
-type OSCColor struct {
+type Color struct {
 	r uint8
 	g uint8
 	b uint8
 	a uint8
 }
 
-type OSCTimeTag struct {
+type TimeTag struct {
 	seconds           int32
 	fractionalSeconds int32
 }

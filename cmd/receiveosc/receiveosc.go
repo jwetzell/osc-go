@@ -102,7 +102,7 @@ func listenTCP(netAddress string, useSLIP bool, format string) {
 
 type SLIP struct {
 	pendingBytes []byte
-	Packets      chan osc.OSCPacket
+	Packets      chan osc.Packet
 }
 
 func (s *SLIP) decode(bytes []byte) {
@@ -155,7 +155,7 @@ func handleSLIP(slip SLIP, format string) {
 func handleTCPConnection(conn net.Conn, useSLIP bool, format string) {
 	slip := SLIP{
 		pendingBytes: []byte{},
-		Packets:      make(chan osc.OSCPacket),
+		Packets:      make(chan osc.Packet),
 	}
 	go handleSLIP(slip, format)
 
@@ -177,17 +177,17 @@ func handleTCPConnection(conn net.Conn, useSLIP bool, format string) {
 	}
 }
 
-func handlePacket(message osc.OSCPacket, format string) {
-	if bundle, ok := message.(*osc.OSCBundle); ok {
+func handlePacket(message osc.Packet, format string) {
+	if bundle, ok := message.(*osc.Bundle); ok {
 		handleBundle(bundle, format)
-	} else if msg, ok := message.(*osc.OSCMessage); ok {
+	} else if msg, ok := message.(*osc.Message); ok {
 		handleMessage(msg, format)
 	} else {
 		fmt.Println("Received unknown OSC Packet type")
 	}
 }
 
-func handleMessage(message *osc.OSCMessage, format string) {
+func handleMessage(message *osc.Message, format string) {
 	if format == "json" {
 		jsonData, _ := json.Marshal(message)
 		fmt.Println(string(jsonData))
@@ -196,7 +196,7 @@ func handleMessage(message *osc.OSCMessage, format string) {
 	}
 }
 
-func handleBundle(bundle *osc.OSCBundle, format string) {
+func handleBundle(bundle *osc.Bundle, format string) {
 	for _, packet := range bundle.Contents {
 		handlePacket(packet, format)
 	}

@@ -9,12 +9,12 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 
 	testCases := []struct {
 		name     string
-		args     []OSCArg
+		args     []Arg
 		expected []byte
 	}{
 		{
 			name: "int arg",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "i",
 					Value: int(123),
@@ -24,7 +24,7 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 		},
 		{
 			name: "int32 arg",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "i",
 					Value: int32(123),
@@ -34,7 +34,7 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 		},
 		{
 			name: "float32 arg",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "f",
 					Value: float32(123),
@@ -44,7 +44,7 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 		},
 		{
 			name: "float32 arg with int value",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "f",
 					Value: int(123),
@@ -54,7 +54,7 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 		},
 		{
 			name: "float32 arg with int32 value",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "f",
 					Value: int32(123),
@@ -64,7 +64,7 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 		},
 		{
 			name: "float32 arg with int64 value",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "f",
 					Value: int64(123),
@@ -74,7 +74,7 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 		},
 		{
 			name: "float64 arg",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "d",
 					Value: float64(123),
@@ -84,7 +84,7 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 		},
 		{
 			name: "float64 arg with float32 value",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "d",
 					Value: float32(123),
@@ -94,7 +94,7 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 		},
 		{
 			name: "float64 arg with int value",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "d",
 					Value: int(123),
@@ -104,7 +104,7 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 		},
 		{
 			name: "float64 arg with int32 value",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "d",
 					Value: int32(123),
@@ -114,7 +114,7 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 		},
 		{
 			name: "float64 arg with int64 value",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "d",
 					Value: int64(123),
@@ -124,7 +124,7 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 		},
 		{
 			name: "int64 arg",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "h",
 					Value: int64(123),
@@ -134,7 +134,7 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 		},
 		{
 			name: "int64 arg with int32 value",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "h",
 					Value: int32(123),
@@ -144,7 +144,7 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 		},
 		{
 			name: "blob arg",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "b",
 					Value: []byte{1, 2, 3},
@@ -154,7 +154,7 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 		},
 		{
 			name: "true arg",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "T",
 					Value: true,
@@ -164,7 +164,7 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 		},
 		{
 			name: "false arg",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "F",
 					Value: false,
@@ -174,7 +174,7 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 		},
 		{
 			name: "nil arg",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "N",
 					Value: nil,
@@ -184,7 +184,7 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 		},
 		{
 			name: "inifinitum arg",
-			args: []OSCArg{
+			args: []Arg{
 				{
 					Type:  "I",
 					Value: nil,
@@ -214,7 +214,7 @@ func TestBadOSCArgsToBuffer(t *testing.T) {
 
 	testCases := []struct {
 		name        string
-		args        []OSCArg
+		args        []Arg
 		errorString string
 	}{}
 
@@ -238,25 +238,25 @@ func TestGoodPacketFromBytes(t *testing.T) {
 
 	testCases := []struct {
 		name     string
-		expected OSCPacket
+		expected Packet
 		bytes    []byte
 	}{
 		{
 			name: "message with no args",
-			expected: &OSCMessage{
+			expected: &Message{
 				Address: "/hello",
-				Args:    []OSCArg{},
+				Args:    []Arg{},
 			},
 			bytes: []byte{47, 104, 101, 108, 108, 111, 0, 0},
 		},
 		{
 			name: "bundle with one message with no args",
-			expected: &OSCBundle{
-				TimeTag: OSCTimeTag{
+			expected: &Bundle{
+				TimeTag: TimeTag{
 					seconds:           32,
 					fractionalSeconds: 0,
 				},
-				Contents: []OSCPacket{&OSCMessage{Address: "/oscillator/4/frequency", Args: []OSCArg{{Type: "f", Value: float32(440)}}}},
+				Contents: []Packet{&Message{Address: "/oscillator/4/frequency", Args: []Arg{{Type: "f", Value: float32(440)}}}},
 			},
 			bytes: []byte{35, 98, 117, 110, 100, 108, 101, 0, 0, 0, 0,
 				32, 0, 0, 0, 0, 0, 0, 0, 32, 47, 111,

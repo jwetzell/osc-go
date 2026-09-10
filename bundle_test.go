@@ -9,17 +9,17 @@ func TestGoodOSCBundleEncoding(t *testing.T) {
 
 	testCases := []struct {
 		name     string
-		bundle   *OSCBundle
+		bundle   *Bundle
 		expected []byte
 	}{
 		{
 			name: "simple contents single message",
-			bundle: &OSCBundle{
-				TimeTag: OSCTimeTag{
+			bundle: &Bundle{
+				TimeTag: TimeTag{
 					seconds:           32,
 					fractionalSeconds: 0,
 				},
-				Contents: []OSCPacket{&OSCMessage{Address: "/oscillator/4/frequency", Args: []OSCArg{{Type: "f", Value: float32(440)}}}},
+				Contents: []Packet{&Message{Address: "/oscillator/4/frequency", Args: []Arg{{Type: "f", Value: float32(440)}}}},
 			},
 			expected: []byte{35, 98, 117, 110, 100, 108, 101, 0, 0, 0, 0,
 				32, 0, 0, 0, 0, 0, 0, 0, 32, 47, 111,
@@ -49,17 +49,17 @@ func TestBadOSCBundleEncoding(t *testing.T) {
 
 	testCases := []struct {
 		name        string
-		bundle      *OSCBundle
+		bundle      *Bundle
 		errorString string
 	}{
 		{
 			name: "bundle contains message with bad address",
-			bundle: &OSCBundle{
-				TimeTag: OSCTimeTag{
+			bundle: &Bundle{
+				TimeTag: TimeTag{
 					seconds:           32,
 					fractionalSeconds: 0,
 				},
-				Contents: []OSCPacket{&OSCMessage{Address: "hello", Args: []OSCArg{}}},
+				Contents: []Packet{&Message{Address: "hello", Args: []Arg{}}},
 			},
 			errorString: "OSC Message address must start with /",
 		},
@@ -84,17 +84,17 @@ func TestBadOSCBundleEncoding(t *testing.T) {
 func TestGoodOSCBundleDecoding(t *testing.T) {
 	testCases := []struct {
 		name     string
-		expected *OSCBundle
+		expected *Bundle
 		bytes    []byte
 	}{
 		{
 			name: "simple contents single message",
-			expected: &OSCBundle{
-				TimeTag: OSCTimeTag{
+			expected: &Bundle{
+				TimeTag: TimeTag{
 					seconds:           32,
 					fractionalSeconds: 0,
 				},
-				Contents: []OSCPacket{&OSCMessage{Address: "/oscillator/4/frequency", Args: []OSCArg{{Type: "f", Value: float32(440)}}}},
+				Contents: []Packet{&Message{Address: "/oscillator/4/frequency", Args: []Arg{{Type: "f", Value: float32(440)}}}},
 			},
 			bytes: []byte{35, 98, 117, 110, 100, 108, 101, 0, 0, 0, 0,
 				32, 0, 0, 0, 0, 0, 0, 0, 32, 47, 111,
@@ -104,17 +104,17 @@ func TestGoodOSCBundleDecoding(t *testing.T) {
 		},
 		{
 			name: "simple contents nested bundle",
-			expected: &OSCBundle{
-				TimeTag: OSCTimeTag{
+			expected: &Bundle{
+				TimeTag: TimeTag{
 					seconds:           32,
 					fractionalSeconds: 0,
 				},
-				Contents: []OSCPacket{&OSCBundle{
-					TimeTag: OSCTimeTag{
+				Contents: []Packet{&Bundle{
+					TimeTag: TimeTag{
 						seconds:           64,
 						fractionalSeconds: 0,
 					},
-					Contents: []OSCPacket{&OSCMessage{Address: "/oscillator/4/frequency", Args: []OSCArg{{Type: "f", Value: float32(440)}}}},
+					Contents: []Packet{&Message{Address: "/oscillator/4/frequency", Args: []Arg{{Type: "f", Value: float32(440)}}}},
 				}},
 			},
 			bytes: []byte{35, 98, 117, 110, 100, 108, 101, 0, // #bundle
