@@ -29,10 +29,22 @@ func main() {
 				Usage: "port to receive OSC messages on",
 				Value: 27900,
 			},
+			&cli.StringSliceFlag{
+				Name:  "channel",
+				Usage: "Startup channels",
+				Value: []string{},
+			},
+			&cli.StringFlag{
+				Name:  "username",
+				Usage: "username to use for sending messages",
+				Value: "User",
+			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			ip := cmd.String("ip")
 			port := cmd.Int32("port")
+			startupChannels := cmd.StringSlice("channel")
+			username := cmd.String("username")
 
 			netAddress := fmt.Sprintf("%s:%d", ip, port)
 
@@ -40,90 +52,47 @@ func main() {
 				IP:   net.ParseIP("255.255.255.255"),
 				Port: int(port),
 			})
+
 			if err != nil {
 				return err
 			}
 
-			channels := []*Channel{}
+			chatApp := &ChatApp{
+				username:        username,
+				selectedChannel: "",
+				app:             tview.NewApplication(),
+				chatView:        tview.NewFlex(),
+				channels:        []*Channel{},
+				messageInput:    tview.NewInputField(),
+				channelList:     tview.NewList(),
+				mainFrame:       tview.NewFlex(),
+				outConn:         outConn,
+			}
 
-			app := tview.NewApplication()
-			mainFrame := tview.NewFlex()
-			channelList := tview.NewList()
-			chatView := tview.NewFlex()
-			messageInput := tview.NewInputField()
+			chatApp.initViews()
 
-			channelList.SetTitle("Channels")
-			channelList.SetBorder(true)
-			chatView.SetBorder(true)
-			chatView.SetTitle("Messages (Select Channel)")
-			chatView.SetDirection(tview.FlexRow)
-
-			mainFrame.AddItem(channelList, 0, 1, false)
-			mainFrame.AddItem(chatView, 0, 3, true)
-
-			app.SetRoot(mainFrame, true).SetFocus(channelList)
-
-			selectedChannel := ""
-
-			messageInput.SetPlaceholder("Message")
-			messageInput.SetDoneFunc(func(key tcell.Key) {
-				if key == tcell.KeyEnter && selectedChannel != "" {
-					text := messageInput.GetText()
-					if text != "" {
-						// do something
-						chatMessage := osc.Message{
-							Address: fmt.Sprintf("/theatrechat/message/%s", selectedChannel),
-							Args: []osc.Arg{
-								osc.StringArg("Me"),
-								osc.StringArg(text),
-							},
-						}
-						bytes, err := chatMessage.ToBytes()
-						if err == nil {
-							outConn.Write(bytes)
-						}
-						messageInput.SetText("")
-					}
+			if len(startupChannels) > 0 {
+				for _, ch := range startupChannels {
+					chatApp.addChannel(ch)
 				}
-			})
+			}
 
+			//TODO(jwetzell): actually handle UDP loop lifecycle?
 			go listenUDP(netAddress, func(chat Chat) {
-				app.QueueUpdateDraw(func() {
-
-					var channel *Channel
-					for _, c := range channels {
+				chatApp.app.QueueUpdateDraw(func() {
+					for _, c := range chatApp.channels {
+						// find the channel that matches the incoming chat message
 						if c.Name == chat.Channel {
-							channel = c
-							break
+							c.AddChat(chat)
+							return
 						}
 					}
-					if channel == nil {
-						channel = &Channel{
-							Name:         chat.Channel,
-							MessagesView: tview.NewTextView().SetDynamicColors(true),
-						}
-						channels = append(channels, channel)
-					}
-
-					fmt.Fprintf(channel.MessagesView, "[%s] %s: %s\n", chat.Channel, chat.User, chat.Text)
-
-					channelList.Clear()
-					for _, channel := range channels {
-						ch := channel
-						channelList.AddItem(ch.Name, "", 0, func() {
-							selectedChannel = ch.Name
-							chatView.Clear()
-							chatView.SetTitle(fmt.Sprintf("Messages (%s)", ch.Name))
-							chatView.AddItem(ch.MessagesView, 0, 1, false)
-							chatView.AddItem(messageInput, 1, 0, true)
-							app.SetFocus(messageInput)
-						})
-					}
-
 				})
 			})
 
-			err = app.Run()
+			chatApp.app.EnableMouse(true)
+
+			err = chatApp.app.Run()
 			if err != nil {
 				return err
 			}
@@ -136,15 +105,74 @@ func main() {
 	}
 }
 
-type Channel struct {
-	Name         string
-	MessagesView *tview.TextView
+type ChatApp struct {
+	username        string
+	selectedChannel string
+	app             *tview.Application
+	chatView        *tview.Flex
+	channelList     *tview.List
+	mainFrame       *tview.Flex
+	messageInput    *tview.InputField
+	channels        []*Channel
+	outConn         *net.UDPConn
 }
 
-type Chat struct {
-	Channel string
-	User    string
-	Text    string
+func (a *ChatApp) initViews() {
+	a.channelList.SetTitle("Channels")
+	a.channelList.SetBorder(true)
+	a.chatView.SetBorder(true)
+	a.chatView.SetTitle("Messages (Select Channel)")
+	a.chatView.SetDirection(tview.FlexRow)
+
+	a.mainFrame.AddItem(a.channelList, 0, 1, false)
+	a.mainFrame.AddItem(a.chatView, 0, 3, true)
+
+	a.app.SetRoot(a.mainFrame, true).SetFocus(a.channelList)
+
+	a.messageInput.SetPlaceholder("Message")
+	a.messageInput.SetDoneFunc(func(key tcell.Key) {
+		if key == tcell.KeyEnter && a.selectedChannel != "" {
+			a.sendChat()
+		}
+	})
+}
+
+func (a *ChatApp) channelListSelected(channel *Channel) {
+	a.selectedChannel = channel.Name
+	a.chatView.Clear()
+	a.chatView.SetTitle(fmt.Sprintf("Messages (%s)", channel.Name))
+	a.chatView.AddItem(channel.MessagesView, 0, 1, false)
+	a.chatView.AddItem(a.messageInput, 1, 0, true)
+	a.app.SetFocus(a.messageInput)
+}
+
+func (a *ChatApp) addChannel(name string) {
+	channel := &Channel{
+		Name:         name,
+		MessagesView: tview.NewTextView().SetDynamicColors(true),
+	}
+	a.channels = append(a.channels, channel)
+	a.channelList.AddItem(channel.Name, "", 0, func() {
+		a.channelListSelected(channel)
+	})
+}
+
+func (a *ChatApp) sendChat() {
+	msg := a.messageInput.GetText()
+	if msg != "" {
+		chatMessage := osc.Message{
+			Address: fmt.Sprintf("/theatrechat/message/%s", a.selectedChannel),
+			Args: []osc.Arg{
+				osc.StringArg(a.username),
+				osc.StringArg(msg),
+			},
+		}
+		bytes, err := chatMessage.ToBytes()
+		if err == nil {
+			a.outConn.Write(bytes)
+		}
+		a.messageInput.SetText("")
+	}
 }
 
 func listenUDP(netAddress string, handleChat func(chat Chat)) {
