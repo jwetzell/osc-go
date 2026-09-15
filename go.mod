@@ -5,7 +5,7 @@ go 1.27.1
 require (
 	github.com/gdamore/tcell/v2 v2.13.10
 	github.com/rivo/tview v0.42.0
-	github.com/urfave/cli/v3 v3.12.0
+	github.com/urfave/cli/v3 v3.13.0
 )
 
 require (
