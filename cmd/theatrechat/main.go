@@ -78,17 +78,7 @@ func main() {
 			}
 
 			//TODO(jwetzell): actually handle UDP loop lifecycle?
-			go listenUDP(netAddress, func(chat Chat) {
-				chatApp.app.QueueUpdateDraw(func() {
-					for _, c := range chatApp.channels {
-						// find the channel that matches the incoming chat message
-						if c.Name == chat.Channel {
-							c.AddChat(chat)
-							return
-						}
-					}
-				})
-			})
+			go listenUDP(netAddress, chatApp.handleChat, chatApp.handleFlash)
 
 			chatApp.app.EnableMouse(true)
 
@@ -115,6 +105,26 @@ type ChatApp struct {
 	messageInput    *tview.InputField
 	channels        []*Channel
 	outConn         *net.UDPConn
+}
+
+func (a *ChatApp) handleChat(chat Chat) {
+	a.app.QueueUpdateDraw(func() {
+		for _, c := range a.channels {
+			if c.Name == chat.Channel {
+				c.AddChat(chat)
+				return
+			}
+		}
+	})
+}
+
+func (a *ChatApp) handleFlash(channel string) {
+	for _, c := range a.channels {
+		if c.Name == channel && a.selectedChannel == channel {
+			//TODO(jwetzell): flash channel
+			return
+		}
+	}
 }
 
 func (a *ChatApp) initViews() {
@@ -175,7 +185,7 @@ func (a *ChatApp) sendChat() {
 	}
 }
 
-func listenUDP(netAddress string, handleChat func(chat Chat)) {
+func listenUDP(netAddress string, handleChat func(chat Chat), handleFlash func(channel string)) {
 
 	laddr, err := net.ResolveUDPAddr("udp4", netAddress)
 	if err != nil {
@@ -216,6 +226,9 @@ func listenUDP(netAddress string, handleChat func(chat Chat)) {
 						Text:    fmt.Sprintf("%v", text),
 					})
 				}
+			} else if strings.HasPrefix(msg.Address, "/theatrechat/flash/") {
+				channel := strings.TrimPrefix(msg.Address, "/theatrechat/flash/")
+				handleFlash(channel)
 			}
 		}
 	}
