@@ -7,7 +7,7 @@ import (
 	"os"
 	"strconv"
 
-	osc "github.com/jwetzell/osc-go"
+	"github.com/jwetzell/osc-go"
 	"github.com/urfave/cli/v3"
 )
 
