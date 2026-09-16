@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
-	osc "github.com/jwetzell/osc-go"
+	"github.com/jwetzell/osc-go"
 	"github.com/rivo/tview"
 	"github.com/urfave/cli/v3"
 )
