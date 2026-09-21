@@ -22,3 +22,20 @@ type Chat struct {
 	User    string
 	Text    string
 }
+
+// structs from official TheatreChat session data
+type channel struct {
+	Id             string
+	FriendlyName   string
+	Colour         string
+	FlashOnMessage bool
+}
+
+type session struct {
+	Username     string
+	Channels     []channel
+	QuickSelects []string
+	TextSize     int
+	ColorTheme   int
+	BroadcastIp  string
+}

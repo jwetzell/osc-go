@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/gob"
 	"fmt"
 	"net"
 	"os"
@@ -29,6 +30,11 @@ func main() {
 				Usage: "port to receive OSC messages on",
 				Value: 27900,
 			},
+			&cli.StringFlag{
+				Name:  "broadcast-ip",
+				Usage: "ip to broadcast OSC messages on",
+				Value: "255.255.255.255",
+			},
 			&cli.StringSliceFlag{
 				Name:  "channel",
 				Usage: "Startup channels",
@@ -39,17 +45,45 @@ func main() {
 				Usage: "username to use for sending messages",
 				Value: "User",
 			},
+			&cli.StringFlag{
+				Name:  "session",
+				Usage: "official TheatreChat session to load",
+				Value: "",
+			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			ip := cmd.String("ip")
 			port := cmd.Int32("port")
+			broadcastIp := cmd.String("broadcast-ip")
 			startupChannels := cmd.StringSlice("channel")
 			username := cmd.String("username")
+			sessionPath := cmd.String("session")
+
+			var sessionData session
+
+			if sessionPath != "" {
+				sessionFile, err := os.Open(sessionPath)
+				if err != nil {
+					return err
+				}
+				g := gob.NewDecoder(sessionFile)
+
+				err = g.Decode(&sessionData)
+
+				if err != nil {
+					return err
+				}
+				username = sessionData.Username
+				for _, ch := range sessionData.Channels {
+					startupChannels = append(startupChannels, ch.Id)
+				}
+				broadcastIp = sessionData.BroadcastIp
+			}
 
 			netAddress := fmt.Sprintf("%s:%d", ip, port)
 
 			outConn, err := net.DialUDP("udp", nil, &net.UDPAddr{
-				IP:   net.ParseIP("255.255.255.255"),
+				IP:   net.ParseIP(broadcastIp),
 				Port: int(port),
 			})
 
@@ -107,6 +141,11 @@ type ChatApp struct {
 	outConn         *net.UDPConn
 }
 
+func (a *ChatApp) handleInputCapture(event *tcell.EventKey) *tcell.EventKey {
+	//TODO(jwetzell): setup keys to navigate to different panels
+	return event
+}
+
 func (a *ChatApp) handleChat(chat Chat) {
 	a.app.QueueUpdateDraw(func() {
 		for _, c := range a.channels {
@@ -136,6 +175,7 @@ func (a *ChatApp) initViews() {
 
 	a.mainFrame.AddItem(a.channelList, 0, 1, false)
 	a.mainFrame.AddItem(a.chatView, 0, 3, true)
+	a.mainFrame.SetInputCapture(a.handleInputCapture)
 
 	a.app.SetRoot(a.mainFrame, true).SetFocus(a.channelList)
 
