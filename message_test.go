@@ -222,6 +222,22 @@ func TestBadOSCMessageEncoding(t *testing.T) {
 			},
 			errorString: "OSC arg had color type but non-color value",
 		},
+		{
+			name: "empty arg type",
+			message: &Message{
+				Address: "/hello",
+				Args:    []Arg{{Type: "", Value: "value"}},
+			},
+			errorString: "OSC Message argument type cannot be empty",
+		},
+		{
+			name: "arg type longer than one character",
+			message: &Message{
+				Address: "/hello",
+				Args:    []Arg{{Type: "ii", Value: 32}},
+			},
+			errorString: "OSC Message argument type must be a single character",
+		},
 	}
 
 	for _, testCase := range testCases {
