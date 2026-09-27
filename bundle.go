@@ -26,6 +26,20 @@ func (b *Bundle) ToBytes() ([]byte, error) {
 	return bytes, nil
 }
 
+func (b Bundle) MarshalBinary() ([]byte, error) {
+	return b.ToBytes()
+}
+
+func (b *Bundle) UnmarshalBinary(data []byte) error {
+	msg, _, err := BundleFromBytes(data)
+	if err != nil {
+		return err
+	}
+	b.TimeTag = msg.TimeTag
+	b.Contents = msg.Contents
+	return nil
+}
+
 func BundleFromBytes(bytes []byte) (*Bundle, []byte, error) {
 	if len(bytes) < 20 {
 		return nil, bytes, errors.New("OSC Bundle has to be at least 20 bytes")

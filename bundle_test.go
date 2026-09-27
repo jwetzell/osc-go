@@ -2,6 +2,7 @@ package osc
 
 import (
 	"reflect"
+	"slices"
 	"testing"
 )
 
@@ -226,6 +227,74 @@ func TestBadOSCBundleDecoding(t *testing.T) {
 				t.Fatalf("BundleFromBytes got error '%s', expected '%s'", err.Error(), testCase.errorString)
 			}
 		})
+	}
+}
+
+func TestOSCBundleMarshalBinary(t *testing.T) {
+	message := &Bundle{
+		TimeTag: TimeTag{
+			seconds:           1,
+			fractionalSeconds: 2,
+		},
+		Contents: []Packet{
+			&Message{
+				Address: "/hello",
+			},
+		},
+	}
+
+	got, err := message.MarshalBinary()
+	if err != nil {
+		t.Fatalf("Bundle.MarshalBinary failed: %s", err.Error())
+	}
+
+	expected, err := message.ToBytes()
+	if err != nil {
+		t.Fatalf("Bundle.ToBytes failed: %s", err.Error())
+	}
+	if !slices.Equal(got, expected) {
+		t.Fatalf("Bundle.MarshalBinary output does not match Bundle.ToBytes output")
+	}
+}
+
+func TestGoodOSCBundleUnmarshalBinary(t *testing.T) {
+	message := &Bundle{}
+
+	bytes := []byte{35, 98, 117, 110, 100, 108, 101, 0, 0, 0, 0,
+		32, 0, 0, 0, 0, 0, 0, 0, 32, 47, 111,
+		115, 99, 105, 108, 108, 97, 116, 111, 114, 47, 52,
+		47, 102, 114, 101, 113, 117, 101, 110, 99, 121, 0,
+		44, 102, 0, 0, 67, 220, 0, 0}
+
+	err := message.UnmarshalBinary(bytes)
+	if err != nil {
+		t.Fatalf("Bundle.UnmarshalBinary failed: %s", err.Error())
+	}
+
+	expected, _, err := BundleFromBytes(bytes)
+	if err != nil {
+		t.Fatalf("BundleFromBytes failed: %s", err.Error())
+	}
+
+	if !reflect.DeepEqual(message, expected) {
+		t.Fatalf("Bundle.UnmarshalBinary result does not match BundleFromBytes result.\nGot: %+v\nExpected: %+v", message, expected)
+	}
+}
+
+func TestBadOSCBundleUnmarshalBinary(t *testing.T) {
+	message := &Bundle{}
+
+	bytes := []byte{}
+
+	got := message.UnmarshalBinary(bytes)
+	if got == nil {
+		t.Fatalf("Bundle.UnmarshalBinary expected to fail but got no error")
+	}
+
+	_, _, expected := BundleFromBytes(bytes)
+
+	if got.Error() != expected.Error() {
+		t.Fatalf("Bundle.UnmarshalBinary got error '%s', expected '%s'", got.Error(), expected.Error())
 	}
 }
 
