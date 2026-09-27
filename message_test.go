@@ -3,6 +3,7 @@ package osc
 import (
 	"math"
 	"reflect"
+	"slices"
 	"testing"
 )
 
@@ -525,6 +526,48 @@ func TestBadOSCMessageDecoding(t *testing.T) {
 				t.Fatalf("MessageFromBytes got error '%s', expected '%s'", err.Error(), testCase.errorString)
 			}
 		})
+	}
+}
+
+func TestOSCMessageMarshalBinary(t *testing.T) {
+	message := &Message{
+		Address: "/hello",
+		Args: []Arg{
+			{Type: "i", Value: 35},
+		},
+	}
+
+	got, err := message.MarshalBinary()
+	if err != nil {
+		t.Fatalf("Message.MarshalBinary failed: %s", err.Error())
+	}
+
+	expected, err := message.ToBytes()
+	if err != nil {
+		t.Fatalf("Message.ToBytes failed: %s", err.Error())
+	}
+	if !slices.Equal(got, expected) {
+		t.Fatalf("Message.MarshalBinary output does not match Message.ToBytes output")
+	}
+}
+
+func TestOSCMessageUnmarshalBinary(t *testing.T) {
+	message := &Message{}
+
+	bytes := []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 105, 0, 0, 0, 0, 0, 35}
+
+	err := message.UnmarshalBinary(bytes)
+	if err != nil {
+		t.Fatalf("Message.UnmarshalBinary failed: %s", err.Error())
+	}
+
+	expected, err := MessageFromBytes(bytes)
+	if err != nil {
+		t.Fatalf("MessageFromBytes failed: %s", err.Error())
+	}
+
+	if !reflect.DeepEqual(message, expected) {
+		t.Fatalf("Message.UnmarshalBinary result does not match MessageFromBytes result.\nGot: %+v\nExpected: %+v", message, expected)
 	}
 }
 

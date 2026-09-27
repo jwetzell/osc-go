@@ -44,6 +44,20 @@ func (m *Message) ToBytes() ([]byte, error) {
 	return oscBuffer, nil
 }
 
+func (m Message) MarshalBinary() ([]byte, error) {
+	return m.ToBytes()
+}
+
+func (m *Message) UnmarshalBinary(data []byte) error {
+	msg, err := MessageFromBytes(data)
+	if err != nil {
+		return err
+	}
+	m.Address = msg.Address
+	m.Args = msg.Args
+	return nil
+}
+
 func MessageFromBytes(bytes []byte) (*Message, error) {
 	if len(bytes) == 0 {
 		return nil, errors.New("cannot create OSC Message from empty byte array")
