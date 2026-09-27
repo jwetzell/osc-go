@@ -551,7 +551,7 @@ func TestOSCMessageMarshalBinary(t *testing.T) {
 	}
 }
 
-func TestOSCMessageUnmarshalBinary(t *testing.T) {
+func TestGoodOSCMessageUnmarshalBinary(t *testing.T) {
 	message := &Message{}
 
 	bytes := []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 105, 0, 0, 0, 0, 0, 35}
@@ -568,6 +568,23 @@ func TestOSCMessageUnmarshalBinary(t *testing.T) {
 
 	if !reflect.DeepEqual(message, expected) {
 		t.Fatalf("Message.UnmarshalBinary result does not match MessageFromBytes result.\nGot: %+v\nExpected: %+v", message, expected)
+	}
+}
+
+func TestBadOSCMessageUnmarshalBinary(t *testing.T) {
+	message := &Message{}
+
+	bytes := []byte{}
+
+	got := message.UnmarshalBinary(bytes)
+	if got == nil {
+		t.Fatalf("Message.UnmarshalBinary expected to fail but got no error")
+	}
+
+	_, expected := MessageFromBytes(bytes)
+
+	if got.Error() != expected.Error() {
+		t.Fatalf("Message.UnmarshalBinary got error '%s', expected '%s'", got.Error(), expected.Error())
 	}
 }
 

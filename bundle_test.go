@@ -253,11 +253,11 @@ func TestOSCBundleMarshalBinary(t *testing.T) {
 		t.Fatalf("Bundle.ToBytes failed: %s", err.Error())
 	}
 	if !slices.Equal(got, expected) {
-		t.Fatalf("Bundle.MarshalBinary output does not match Message.ToBytes output")
+		t.Fatalf("Bundle.MarshalBinary output does not match Bundle.ToBytes output")
 	}
 }
 
-func TestOSCBundleUnmarshalBinary(t *testing.T) {
+func TestGoodOSCBundleUnmarshalBinary(t *testing.T) {
 	message := &Bundle{}
 
 	bytes := []byte{35, 98, 117, 110, 100, 108, 101, 0, 0, 0, 0,
@@ -278,6 +278,23 @@ func TestOSCBundleUnmarshalBinary(t *testing.T) {
 
 	if !reflect.DeepEqual(message, expected) {
 		t.Fatalf("Bundle.UnmarshalBinary result does not match BundleFromBytes result.\nGot: %+v\nExpected: %+v", message, expected)
+	}
+}
+
+func TestBadOSCBundleUnmarshalBinary(t *testing.T) {
+	message := &Bundle{}
+
+	bytes := []byte{}
+
+	got := message.UnmarshalBinary(bytes)
+	if got == nil {
+		t.Fatalf("Bundle.UnmarshalBinary expected to fail but got no error")
+	}
+
+	_, _, expected := BundleFromBytes(bytes)
+
+	if got.Error() != expected.Error() {
+		t.Fatalf("Bundle.UnmarshalBinary got error '%s', expected '%s'", got.Error(), expected.Error())
 	}
 }
 
