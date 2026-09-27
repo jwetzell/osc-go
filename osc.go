@@ -60,11 +60,10 @@ func float64ToOSCBytes(number float64) []byte {
 }
 
 func byteArrayToOSCBytes(bytes []byte) []byte {
-	oscBytes := []byte{}
 
 	bytesSize := len(bytes)
 	bytesSizeBytes := int32ToOSCBytes(int32(bytesSize))
-	oscBytes = append(oscBytes, bytesSizeBytes...)
+	oscBytes := []byte{bytesSizeBytes[0], bytesSizeBytes[1], bytesSizeBytes[2], bytesSizeBytes[3]}
 	oscBytes = append(oscBytes, bytes...)
 
 	padLength := 4 - (bytesSize % 4)
@@ -78,15 +77,22 @@ func byteArrayToOSCBytes(bytes []byte) []byte {
 }
 
 func timeTagToOSCBytes(timeTag TimeTag) []byte {
-	timeTagBytes := int32ToOSCBytes(timeTag.seconds)
+	secondsBytes := int32ToOSCBytes(timeTag.seconds)
 	fractionalSecondsBytes := int32ToOSCBytes(timeTag.fractionalSeconds)
-	timeTagBytes = append(timeTagBytes, fractionalSecondsBytes...)
-
+	timeTagBytes := []byte{
+		secondsBytes[0],
+		secondsBytes[1],
+		secondsBytes[2],
+		secondsBytes[3],
+		fractionalSecondsBytes[0],
+		fractionalSecondsBytes[1],
+		fractionalSecondsBytes[2],
+		fractionalSecondsBytes[3],
+	}
 	return timeTagBytes
 }
 
 func argsToBuffer(args []Arg) ([]byte, error) {
-	//TODO(jwetzell): add error handling
 	var argBuffers = []byte{}
 
 	for _, arg := range args {
@@ -134,13 +140,13 @@ func argsToBuffer(args []Arg) ([]byte, error) {
 				return nil, errors.New("OSC arg had blob type but non-blob value")
 			}
 		case "T":
-			argBuffers = append(argBuffers, make([]byte, 0)...)
+			continue
 		case "F":
-			argBuffers = append(argBuffers, make([]byte, 0)...)
+			continue
 		case "N":
-			argBuffers = append(argBuffers, make([]byte, 0)...)
+			continue
 		case "I":
-			argBuffers = append(argBuffers, make([]byte, 0)...)
+			continue
 		case "r":
 			color, ok := arg.Value.(Color)
 			if !ok {
@@ -226,23 +232,23 @@ func readOSCInt32(bytes []byte) (int32, []byte, error) {
 	if len(bytes) < 4 {
 		return 0, bytes, errors.New("OSC int32 arg is not 4 bytes")
 	}
-	bits := binary.BigEndian.Uint32(bytes[0:4])
-	return int32(bits), bytes[4:], nil
+	value := int32(bytes[0])<<24 | int32(bytes[1])<<16 | int32(bytes[2])<<8 | int32(bytes[3])
+	return value, bytes[4:], nil
 }
 
 func readOSCInt64(bytes []byte) (int64, []byte, error) {
 	if len(bytes) < 8 {
 		return 0, bytes, errors.New("OSC int64 arg is not 8 bytes")
 	}
-	bits := binary.BigEndian.Uint64(bytes[0:8])
-	return int64(bits), bytes[8:], nil
+	value := int64(bytes[0])<<56 | int64(bytes[1])<<48 | int64(bytes[2])<<40 | int64(bytes[3])<<32 | int64(bytes[4])<<24 | int64(bytes[5])<<16 | int64(bytes[6])<<8 | int64(bytes[7])
+	return value, bytes[8:], nil
 }
 
 func readOSCFloat32(bytes []byte) (float32, []byte, error) {
 	if len(bytes) < 4 {
 		return 0, bytes, errors.New("OSC float32 arg is not 4 bytes")
 	}
-	bits := binary.BigEndian.Uint32(bytes[0:4])
+	bits := uint32(bytes[0])<<24 | uint32(bytes[1])<<16 | uint32(bytes[2])<<8 | uint32(bytes[3])
 	return math.Float32frombits(bits), bytes[4:], nil
 }
 
@@ -250,7 +256,7 @@ func readOSCFloat64(bytes []byte) (float64, []byte, error) {
 	if len(bytes) < 8 {
 		return 0, bytes, errors.New("OSC float64 arg is not 8 bytes")
 	}
-	bits := binary.BigEndian.Uint64(bytes[0:8])
+	bits := uint64(bytes[0])<<56 | uint64(bytes[1])<<48 | uint64(bytes[2])<<40 | uint64(bytes[3])<<32 | uint64(bytes[4])<<24 | uint64(bytes[5])<<16 | uint64(bytes[6])<<8 | uint64(bytes[7])
 	return math.Float64frombits(bits), bytes[8:], nil
 }
 
@@ -319,7 +325,6 @@ func readOSCArg(bytes []byte, oscType string) (Arg, []byte, error) {
 	oscArg.Type = oscType
 
 	var remainingBytes []byte
-	//TODO(jwetzell): add error handling
 	switch oscType {
 	case "s":
 		argString, bytesLeft, err := readOSCString(bytes)
