@@ -81,8 +81,8 @@ func TestNilArg(t *testing.T) {
 }
 
 func TestColorArg(t *testing.T) {
-	expected := Color{r: 255, g: 0, b: 0, a: 255}
-	arg := ColorArg(expected.r, expected.b, expected.g, expected.r)
+	expected := Color{R: 255, G: 0, B: 0, A: 255}
+	arg := ColorArg(expected.R, expected.B, expected.G, expected.R)
 
 	if arg.Type != "r" {
 		t.Errorf("Expected type 'r', got '%s'", arg.Type)
@@ -115,8 +115,8 @@ func TestDoubleArg(t *testing.T) {
 }
 
 func TestTimeTagArg(t *testing.T) {
-	expected := TimeTag{seconds: 12345, fractionalSeconds: 67890}
-	arg := TimeTagArg(expected.seconds, expected.fractionalSeconds)
+	expected := TimeTag{Seconds: 12345, FractionalSeconds: 67890}
+	arg := TimeTagArg(expected.Seconds, expected.FractionalSeconds)
 
 	if arg.Type != "t" {
 		t.Errorf("Expected type 't', got '%s'", arg.Type)

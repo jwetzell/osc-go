@@ -62,7 +62,7 @@ func TestGoodOSCMessageEncoding(t *testing.T) {
 		},
 		{
 			name:     "simple address color arg",
-			message:  &Message{Address: "/hello", Args: []Arg{{Type: "r", Value: Color{r: 20, g: 21, b: 22, a: 10}}}},
+			message:  &Message{Address: "/hello", Args: []Arg{{Type: "r", Value: Color{R: 20, G: 21, B: 22, A: 10}}}},
 			expected: []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 114, 0, 0, 20, 21, 22, 10},
 		},
 		{
@@ -300,7 +300,7 @@ func TestGoodOSCMessageDecoding(t *testing.T) {
 		{
 			name:     "simple address color arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 114, 0, 0, 20, 21, 22, 10},
-			expected: Message{Address: "/hello", Args: []Arg{{Type: "r", Value: Color{r: 20, g: 21, b: 22, a: 10}}}},
+			expected: Message{Address: "/hello", Args: []Arg{{Type: "r", Value: Color{R: 20, G: 21, B: 22, A: 10}}}},
 		},
 		{
 			name:     "simple address nil arg",

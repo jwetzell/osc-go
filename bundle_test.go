@@ -17,8 +17,8 @@ func TestGoodOSCBundleEncoding(t *testing.T) {
 			name: "simple contents single message",
 			bundle: &Bundle{
 				TimeTag: TimeTag{
-					seconds:           32,
-					fractionalSeconds: 0,
+					Seconds:           32,
+					FractionalSeconds: 0,
 				},
 				Contents: []Packet{&Message{Address: "/oscillator/4/frequency", Args: []Arg{{Type: "f", Value: float32(440)}}}},
 			},
@@ -57,8 +57,8 @@ func TestBadOSCBundleEncoding(t *testing.T) {
 			name: "bundle contains message with bad address",
 			bundle: &Bundle{
 				TimeTag: TimeTag{
-					seconds:           32,
-					fractionalSeconds: 0,
+					Seconds:           32,
+					FractionalSeconds: 0,
 				},
 				Contents: []Packet{&Message{Address: "hello", Args: []Arg{}}},
 			},
@@ -92,8 +92,8 @@ func TestGoodOSCBundleDecoding(t *testing.T) {
 			name: "simple contents single message",
 			expected: &Bundle{
 				TimeTag: TimeTag{
-					seconds:           32,
-					fractionalSeconds: 0,
+					Seconds:           32,
+					FractionalSeconds: 0,
 				},
 				Contents: []Packet{&Message{Address: "/oscillator/4/frequency", Args: []Arg{{Type: "f", Value: float32(440)}}}},
 			},
@@ -107,13 +107,13 @@ func TestGoodOSCBundleDecoding(t *testing.T) {
 			name: "simple contents nested bundle",
 			expected: &Bundle{
 				TimeTag: TimeTag{
-					seconds:           32,
-					fractionalSeconds: 0,
+					Seconds:           32,
+					FractionalSeconds: 0,
 				},
 				Contents: []Packet{&Bundle{
 					TimeTag: TimeTag{
-						seconds:           64,
-						fractionalSeconds: 0,
+						Seconds:           64,
+						FractionalSeconds: 0,
 					},
 					Contents: []Packet{&Message{Address: "/oscillator/4/frequency", Args: []Arg{{Type: "f", Value: float32(440)}}}},
 				}},
@@ -233,8 +233,8 @@ func TestBadOSCBundleDecoding(t *testing.T) {
 func TestOSCBundleMarshalBinary(t *testing.T) {
 	message := &Bundle{
 		TimeTag: TimeTag{
-			seconds:           1,
-			fractionalSeconds: 2,
+			Seconds:           1,
+			FractionalSeconds: 2,
 		},
 		Contents: []Packet{
 			&Message{

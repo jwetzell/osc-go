@@ -253,8 +253,8 @@ func TestGoodPacketFromBytes(t *testing.T) {
 			name: "bundle with one message with no args",
 			expected: &Bundle{
 				TimeTag: TimeTag{
-					seconds:           32,
-					fractionalSeconds: 0,
+					Seconds:           32,
+					FractionalSeconds: 0,
 				},
 				Contents: []Packet{&Message{Address: "/oscillator/4/frequency", Args: []Arg{{Type: "f", Value: float32(440)}}}},
 			},
