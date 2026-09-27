@@ -29,7 +29,7 @@ func NilArg() Arg {
 }
 
 func ColorArg(red, green, blue, alpha byte) Arg {
-	return Arg{Type: "r", Value: Color{r: red, g: green, b: blue, a: alpha}}
+	return Arg{Type: "r", Value: Color{R: red, G: green, B: blue, A: alpha}}
 }
 
 func Int64Arg(value int64) Arg {
@@ -41,5 +41,5 @@ func DoubleArg(value float64) Arg {
 }
 
 func TimeTagArg(seconds, fractional int32) Arg {
-	return Arg{Type: "t", Value: TimeTag{seconds: seconds, fractionalSeconds: fractional}}
+	return Arg{Type: "t", Value: TimeTag{Seconds: seconds, FractionalSeconds: fractional}}
 }

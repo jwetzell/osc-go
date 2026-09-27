@@ -77,8 +77,8 @@ func byteArrayToOSCBytes(bytes []byte) []byte {
 }
 
 func timeTagToOSCBytes(timeTag TimeTag) []byte {
-	secondsBytes := int32ToOSCBytes(timeTag.seconds)
-	fractionalSecondsBytes := int32ToOSCBytes(timeTag.fractionalSeconds)
+	secondsBytes := int32ToOSCBytes(timeTag.Seconds)
+	fractionalSecondsBytes := int32ToOSCBytes(timeTag.FractionalSeconds)
 	timeTagBytes := []byte{
 		secondsBytes[0],
 		secondsBytes[1],
@@ -153,7 +153,7 @@ func argsToBuffer(args []Arg) ([]byte, error) {
 				return nil, errors.New("OSC arg had color type but non-color value")
 			}
 			if ok {
-				colorBytes := []byte{color.r, color.g, color.b, color.a}
+				colorBytes := []byte{color.R, color.G, color.B, color.A}
 				argBuffers = append(argBuffers, colorBytes...)
 			}
 		case "h":
@@ -292,10 +292,10 @@ func readOSCColor(bytes []byte) (Color, []byte, error) {
 		return Color{0, 0, 0, 0}, bytes, errors.New("OSC color arg is not 4 bytes")
 	}
 	oscColor := Color{
-		r: bytes[0],
-		g: bytes[1],
-		b: bytes[2],
-		a: bytes[3],
+		R: bytes[0],
+		G: bytes[1],
+		B: bytes[2],
+		A: bytes[3],
 	}
 	return oscColor, bytes[4:], nil
 }
@@ -311,8 +311,8 @@ func readOSCTimeTag(bytes []byte) (TimeTag, []byte, error) {
 	}
 
 	return TimeTag{
-			seconds:           seconds,
-			fractionalSeconds: fractionalSeconds,
+			Seconds:           seconds,
+			FractionalSeconds: fractionalSeconds,
 		},
 		remainingBytes,
 		nil
