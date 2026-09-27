@@ -15,23 +15,31 @@ func (m *Message) ToBytes() ([]byte, error) {
 		return nil, errors.New("OSC Message address must start with /")
 	}
 
-	oscBuffer := []byte{}
-
-	oscBuffer = append(oscBuffer, stringToOSCBytes(m.Address)...)
-
 	var sb strings.Builder
 
 	sb.WriteString(",")
 
 	for _, arg := range m.Args {
+		if arg.Type == "" {
+			return nil, errors.New("OSC Message argument type cannot be empty")
+		}
+		if len(arg.Type) != 1 {
+			return nil, errors.New("OSC Message argument type must be a single character")
+		}
 		sb.WriteString(arg.Type)
 	}
-	oscBuffer = append(oscBuffer, stringToOSCBytes(sb.String())...)
+	addressBuffer := stringToOSCBytes(m.Address)
+
+	typeStringBuffer := stringToOSCBytes(sb.String())
+
 	argsBuffer, err := argsToBuffer(m.Args)
 	if err != nil {
 		return nil, err
 	}
-	oscBuffer = append(oscBuffer, argsBuffer...)
+	oscBuffer := append(addressBuffer, typeStringBuffer...)
+	if len(argsBuffer) > 0 {
+		oscBuffer = append(oscBuffer, argsBuffer...)
+	}
 
 	return oscBuffer, nil
 }
