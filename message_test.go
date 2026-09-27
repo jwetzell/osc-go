@@ -81,7 +81,7 @@ func TestGoodOSCMessageEncoding(t *testing.T) {
 				47, 104, 101, 108, 108, 111, 0, 0, 44, 100, 0, 0, 0x40, 0x29, 0x87, 0xec, 0x82, 0x74, 0xb9, 0xe6,
 			},
 		},
-		// TODO(jwetzell): get array args working working
+		// TODO(jwetzell): get array args working
 		// {
 		// 	name: "simple address array arg",
 		// 	message: OSCMessage{
