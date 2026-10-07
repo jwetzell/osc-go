@@ -6,23 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"strings"
 )
 
 func stringToOSCBytes(rawString string) []byte {
-	var sb strings.Builder
+	rawStringLength := len(rawString)
+	amountOfPadding := (4 - (rawStringLength+1)%4) % 4 //strings need to be 4-byte aligned
 
-	sb.WriteString(rawString)
-	sb.WriteString("\u0000")
-
-	padLength := 4 - (len(sb.String()) % 4)
-	if padLength < 4 {
-		for range padLength {
-			sb.WriteString("\u0000")
-		}
-	}
-
-	return []byte(sb.String())
+	bytes := make([]byte, rawStringLength+1+amountOfPadding) // string + null + padding
+	copy(bytes, rawString)
+	return bytes
 }
 
 func int32ToOSCBytes(number int32) []byte {

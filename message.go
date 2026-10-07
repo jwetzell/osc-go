@@ -2,7 +2,6 @@ package osc
 
 import (
 	"errors"
-	"strings"
 )
 
 func (m *Message) ToBytes() ([]byte, error) {
@@ -15,9 +14,7 @@ func (m *Message) ToBytes() ([]byte, error) {
 		return nil, errors.New("OSC Message address must start with /")
 	}
 
-	var sb strings.Builder
-
-	sb.WriteString(",")
+	typeString := ","
 
 	for _, arg := range m.Args {
 		if arg.Type == "" {
@@ -26,11 +23,11 @@ func (m *Message) ToBytes() ([]byte, error) {
 		if len(arg.Type) != 1 {
 			return nil, errors.New("OSC Message argument type must be a single character")
 		}
-		sb.WriteString(arg.Type)
+		typeString += arg.Type
 	}
 	addressBuffer := stringToOSCBytes(m.Address)
 
-	typeStringBuffer := stringToOSCBytes(sb.String())
+	typeStringBuffer := stringToOSCBytes(typeString)
 
 	argsBuffer, err := argsToBuffer(m.Args)
 	if err != nil {
