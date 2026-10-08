@@ -512,6 +512,16 @@ func TestBadOSCMessageDecoding(t *testing.T) {
 			},
 			errorString: "unsupported OSC argument type: x",
 		},
+		{
+			name:        "string not padded with null bytes",
+			bytes:       []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 0, 1, 2},
+			errorString: "OSC string padding is not null bytes",
+		},
+		{
+			name:        "blob not padded with null",
+			bytes:       []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 98, 0, 0, 0, 0, 0, 6, 98, 108, 111, 98, 1, 1, 2, 2},
+			errorString: "OSC blob is not padded with null bytes",
+		},
 	}
 
 	for _, testCase := range testCases {

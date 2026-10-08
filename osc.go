@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 )
 
 func stringToOSCBytes(rawString string) []byte {
@@ -188,35 +189,23 @@ func argsToBuffer(args []Arg) ([]byte, error) {
 }
 
 func readOSCString(bytes []byte) (string, []byte, error) {
-	oscString := ""
-	stringEndIndex := 0
 
-	nullByteFound := false
-	for index, byteIn := range bytes {
-		if byteIn == 0 {
-			nullByteFound = true
-			oscString = string(bytes[0:index])
-			stringEndIndex = index + 1
-			break
-		}
-	}
+	nullByteIndex := slices.Index(bytes, 0)
 
-	if !nullByteFound {
+	if nullByteIndex == -1 {
 		return "", bytes, errors.New("OSC string must be null-terminated")
 	}
-
-	stringPadding := 4 - (stringEndIndex % 4)
-
-	if stringPadding < 4 {
-		stringEndIndex = stringEndIndex + stringPadding
-	}
-
-	if stringEndIndex > len(bytes) {
+	paddingEndIndex := nullByteIndex + (4 - (nullByteIndex)%4) - 1
+	if paddingEndIndex > len(bytes)-1 {
 		return "", bytes, errors.New("OSC string is not properly padded")
 	}
-
-	remainingBytes := bytes[stringEndIndex:]
-
+	for i := nullByteIndex + 1; i <= paddingEndIndex; i++ {
+		if bytes[i] != 0 {
+			return "", bytes, errors.New("OSC string padding is not null bytes")
+		}
+	}
+	oscString := string(bytes[:nullByteIndex])
+	remainingBytes := bytes[paddingEndIndex+1:]
 	return oscString, remainingBytes, nil
 }
 
@@ -267,16 +256,21 @@ func readOSCBlob(bytes []byte) ([]byte, []byte, error) {
 		return []byte{}, bytes, errors.New("OSC blob arg size not valid: size specified is larger than remaining bytes")
 	}
 
-	blobLengthPadding := 4 - (blobLength % 4)
-	blobEnd := 4 + blobLength
+	blobStartIndex := 4
+	paddingAmount := (4 - (int(blobLength) % 4)) % 4
 
-	if blobLengthPadding < 4 {
-		blobEnd = blobEnd + blobLengthPadding
-	}
-	if int(blobEnd) > len(bytes) {
+	paddingEndIndex := blobStartIndex + int(blobLength) + paddingAmount - 1
+
+	if paddingEndIndex > len(bytes)-1 {
 		return []byte{}, bytes, errors.New("OSC blob arg size not valid: size specified is larger than remaining bytes when accounting for padding")
 	}
-	return bytes[4 : 4+blobLength], bytes[blobEnd:], nil
+
+	for i := blobStartIndex + int(blobLength); i <= paddingEndIndex; i++ {
+		if bytes[i] != 0 {
+			return []byte{}, bytes, errors.New("OSC blob is not padded with null bytes")
+		}
+	}
+	return bytes[blobStartIndex : blobStartIndex+int(blobLength)], bytes[paddingEndIndex+1:], nil
 }
 
 func readOSCColor(bytes []byte) (Color, []byte, error) {
