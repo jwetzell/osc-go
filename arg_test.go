@@ -81,8 +81,8 @@ func TestNilArg(t *testing.T) {
 }
 
 func TestColorArg(t *testing.T) {
-	expected := Color{R: 255, G: 0, B: 0, A: 255}
-	arg := ColorArg(expected.R, expected.B, expected.G, expected.R)
+	expected := Color{R: 255, G: 123, B: 222, A: 111}
+	arg := ColorArg(expected.R, expected.G, expected.B, expected.A)
 
 	if arg.Type != "r" {
 		t.Errorf("Expected type 'r', got '%s'", arg.Type)
