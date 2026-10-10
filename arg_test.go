@@ -125,3 +125,108 @@ func TestTimeTagArg(t *testing.T) {
 		t.Errorf("Expected value '%v', got '%v'", expected, arg.Value)
 	}
 }
+
+func TestGoodArgFromStringAndType(t *testing.T) {
+	testCases := []struct {
+		name     string
+		rawArg   string
+		oscType  string
+		expected Arg
+	}{
+		{
+			name:    "string arg",
+			rawArg:  "hello",
+			oscType: "s",
+			expected: Arg{
+				Type:  "s",
+				Value: "hello",
+			},
+		},
+		{
+			name:    "int32 arg",
+			rawArg:  "42",
+			oscType: "i",
+			expected: Arg{
+				Type:  "i",
+				Value: int32(42),
+			},
+		},
+		{
+			name:    "float32 arg",
+			rawArg:  "42.1",
+			oscType: "f",
+			expected: Arg{
+				Type:  "f",
+				Value: float32(42.1),
+			},
+		},
+		{
+			name:    "blob arg",
+			rawArg:  "68656c6c6f", // "hello" in hex
+			oscType: "b",
+			expected: Arg{
+				Type:  "b",
+				Value: []byte("hello"),
+			},
+		},
+		{
+			name:    "int64 arg",
+			rawArg:  "42",
+			oscType: "h",
+			expected: Arg{
+				Type:  "h",
+				Value: int64(42),
+			},
+		},
+		{
+			name:    "float64 arg",
+			rawArg:  "42.1",
+			oscType: "d",
+			expected: Arg{
+				Type:  "d",
+				Value: float64(42.1),
+			},
+		},
+		{
+			name:    "true arg",
+			rawArg:  "",
+			oscType: "T",
+			expected: Arg{
+				Type:  "T",
+				Value: true,
+			},
+		},
+		{
+			name:    "false arg",
+			rawArg:  "",
+			oscType: "F",
+			expected: Arg{
+				Type:  "F",
+				Value: false,
+			},
+		},
+		{
+			name:    "nil arg",
+			rawArg:  "",
+			oscType: "N",
+			expected: Arg{
+				Type:  "N",
+				Value: nil,
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got, err := ArgFromStringAndType(testCase.rawArg, testCase.oscType)
+
+			if err != nil {
+				t.Fatalf("failed to encode properly: %s", err.Error())
+			}
+
+			if !reflect.DeepEqual(got, testCase.expected) {
+				t.Fatalf("failed to encode properly got '%v', expected '%v'", got, testCase.expected)
+			}
+		})
+	}
+}
