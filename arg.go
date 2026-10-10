@@ -60,7 +60,6 @@ func ArgFromStringAndType(rawArg string, oscType string) (Arg, error) {
 	case "i":
 		number, err := strconv.ParseInt(rawArg, 10, 32)
 		if err != nil {
-			// ... handle error
 			return Arg{}, err
 		}
 		return Arg{

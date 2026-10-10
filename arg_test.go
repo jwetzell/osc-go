@@ -230,3 +230,63 @@ func TestGoodArgFromStringAndType(t *testing.T) {
 		})
 	}
 }
+
+func TestBadArgFromStringAndType(t *testing.T) {
+	testCases := []struct {
+		name     string
+		rawArg   string
+		oscType  string
+		errorMsg string
+	}{
+		{
+			name:     "invalid int32",
+			rawArg:   "abc",
+			oscType:  "i",
+			errorMsg: "strconv.ParseInt: parsing \"abc\": invalid syntax",
+		},
+		{
+			name:     "invalid float32",
+			rawArg:   "abc",
+			oscType:  "f",
+			errorMsg: "strconv.ParseFloat: parsing \"abc\": invalid syntax",
+		},
+		{
+			name:     "invalid blob",
+			rawArg:   "zz",
+			oscType:  "b",
+			errorMsg: "encoding/hex: invalid byte: U+007A 'z'",
+		},
+		{
+			name:     "invalid int64",
+			rawArg:   "abc",
+			oscType:  "h",
+			errorMsg: "strconv.ParseInt: parsing \"abc\": invalid syntax",
+		},
+		{
+			name:     "invalid float64",
+			rawArg:   "abc",
+			oscType:  "d",
+			errorMsg: "strconv.ParseFloat: parsing \"abc\": invalid syntax",
+		},
+		{
+			name:     "unsupported OSC type",
+			rawArg:   "42",
+			oscType:  "x",
+			errorMsg: "unsupported OSC arg type: x",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got, err := ArgFromStringAndType(testCase.rawArg, testCase.oscType)
+
+			if err == nil {
+				t.Fatalf("expected error but got: %+v", got)
+			}
+
+			if err.Error() != testCase.errorMsg {
+				t.Fatalf("expected error '%v', got '%v'", testCase.errorMsg, err.Error())
+			}
+		})
+	}
+}
