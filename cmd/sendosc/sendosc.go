@@ -3,11 +3,9 @@ package main
 import (
 	"context"
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"net"
 	"os"
-	"strconv"
 
 	"github.com/jwetzell/osc-go"
 
@@ -76,87 +74,7 @@ func main() {
 	}
 
 	if err := cmd.Run(context.Background(), os.Args); err != nil {
-		panic(err)
-	}
-}
-
-func argToTypedArg(rawArg string, oscType string) osc.Arg {
-
-	switch oscType {
-	case "s":
-		return osc.Arg{
-			Value: rawArg,
-			Type:  "s",
-		}
-	case "i":
-		number, err := strconv.ParseInt(rawArg, 10, 32)
-		if err != nil {
-			// ... handle error
-			panic(err)
-		}
-		return osc.Arg{
-			Value: int32(number),
-			Type:  "i",
-		}
-	case "f":
-		number, err := strconv.ParseFloat(rawArg, 32)
-		if err != nil {
-			// ... handle error
-			panic(err)
-		}
-		return osc.Arg{
-			Value: float32(number),
-			Type:  "f",
-		}
-	case "b":
-		data, err := hex.DecodeString(rawArg)
-		if err != nil {
-			// ... handle error
-			panic(err)
-		}
-		return osc.Arg{
-			Value: data,
-			Type:  "b",
-		}
-	case "h":
-		number, err := strconv.ParseInt(rawArg, 10, 64)
-		if err != nil {
-			// ... handle error
-			panic(err)
-		}
-		return osc.Arg{
-			Value: int64(number),
-			Type:  "h",
-		}
-	case "d":
-		number, err := strconv.ParseFloat(rawArg, 64)
-		if err != nil {
-			// ... handle error
-			panic(err)
-		}
-		return osc.Arg{
-			Value: float64(number),
-			Type:  "d",
-		}
-	case "T":
-		return osc.Arg{
-			Value: true,
-			Type:  "T",
-		}
-	case "F":
-		return osc.Arg{
-			Value: false,
-			Type:  "F",
-		}
-	case "N":
-		return osc.Arg{
-			Value: nil,
-			Type:  "N",
-		}
-	default:
-		fmt.Printf("unsupported OSC arg type: %s\n", oscType)
-		// TODO(jwetzell): something better than this like actual nil, err thing
-		return osc.Arg{}
+		fmt.Printf("Error running command: %v\n", err)
 	}
 }
 
@@ -195,15 +113,19 @@ func send(host string, port int32, address string, args []string, types []string
 		if len(types) > index {
 			oscType = types[index]
 		}
-		arg := argToTypedArg(arg, oscType)
-
-		oscMessage.Args = append(oscMessage.Args, arg)
+		typedArg, err := osc.ArgFromStringAndType(arg, oscType)
+		if err != nil {
+			fmt.Printf("Error converting arg to typed arg: %v", err)
+			return
+		}
+		oscMessage.Args = append(oscMessage.Args, typedArg)
 
 	}
 
 	oscMessageBuffer, err := oscMessage.ToBytes()
 	if err != nil {
-		panic(err)
+		fmt.Printf("Error converting osc message to bytes %v", err)
+		return
 	}
 
 	if slip {
@@ -219,13 +141,13 @@ func send(host string, port int32, address string, args []string, types []string
 	netAddress := net.JoinHostPort(host, fmt.Sprintf("%d", port))
 	conn, err := net.Dial(protocol, netAddress)
 	if err != nil {
-		fmt.Printf("Dial err %v", err)
-		panic(err)
+		fmt.Printf("Dial err %v\n", err)
+		return
 	}
 	defer conn.Close()
 
 	if _, err = conn.Write([]byte(oscMessageBuffer)); err != nil {
-		fmt.Printf("Write err %v", err)
-		panic(err)
+		fmt.Printf("Write err %v\n", err)
+		return
 	}
 }

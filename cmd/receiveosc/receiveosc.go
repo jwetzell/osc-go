@@ -77,7 +77,7 @@ func main() {
 	}
 
 	if err := cmd.Run(context.Background(), os.Args); err != nil {
-		panic(err)
+		fmt.Printf("Error running command: %v\n", err)
 	}
 }
 
@@ -134,7 +134,8 @@ func (s *SLIP) decode(bytes []byte) {
 			} else {
 				oscPacket, _, err := osc.PacketFromBytes(s.pendingBytes)
 				if err != nil {
-					panic(err)
+					fmt.Printf("Error decoding SLIP packet: %v\n", err)
+					return
 				} else {
 					s.Packets <- oscPacket
 				}
@@ -223,13 +224,15 @@ func listenUDP(netAddress string, format string) {
 		bytesRead, _, err := conn.ReadFromUDP(buffer)
 
 		if err != nil {
-			panic(err)
+			fmt.Printf("Error reading from UDP: %v\n", err)
+			return
 		}
 
 		oscPacket, _, err := osc.PacketFromBytes(buffer[0:bytesRead])
 
 		if err != nil {
-			panic(err)
+			fmt.Printf("Error parsing OSC packet: %v\n", err)
+			return
 		}
 		handlePacket(oscPacket, format)
 	}
