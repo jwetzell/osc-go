@@ -1,5 +1,11 @@
 package osc
 
+import (
+	"encoding/hex"
+	"fmt"
+	"strconv"
+)
+
 func StringArg(value string) Arg {
 	return Arg{Type: "s", Value: value}
 }
@@ -42,4 +48,76 @@ func DoubleArg(value float64) Arg {
 
 func TimeTagArg(seconds, fractional int32) Arg {
 	return Arg{Type: "t", Value: TimeTag{Seconds: seconds, FractionalSeconds: fractional}}
+}
+
+func ArgFromStringAndType(rawArg string, oscType string) (Arg, error) {
+	switch oscType {
+	case "s":
+		return Arg{
+			Value: rawArg,
+			Type:  "s",
+		}, nil
+	case "i":
+		number, err := strconv.ParseInt(rawArg, 10, 32)
+		if err != nil {
+			return Arg{}, err
+		}
+		return Arg{
+			Value: int32(number),
+			Type:  "i",
+		}, nil
+	case "f":
+		number, err := strconv.ParseFloat(rawArg, 32)
+		if err != nil {
+			return Arg{}, err
+		}
+		return Arg{
+			Value: float32(number),
+			Type:  "f",
+		}, nil
+	case "b":
+		data, err := hex.DecodeString(rawArg)
+		if err != nil {
+			return Arg{}, err
+		}
+		return Arg{
+			Value: data,
+			Type:  "b",
+		}, nil
+	case "h":
+		number, err := strconv.ParseInt(rawArg, 10, 64)
+		if err != nil {
+			return Arg{}, err
+		}
+		return Arg{
+			Value: int64(number),
+			Type:  "h",
+		}, nil
+	case "d":
+		number, err := strconv.ParseFloat(rawArg, 64)
+		if err != nil {
+			return Arg{}, err
+		}
+		return Arg{
+			Value: float64(number),
+			Type:  "d",
+		}, nil
+	case "T":
+		return Arg{
+			Value: true,
+			Type:  "T",
+		}, nil
+	case "F":
+		return Arg{
+			Value: false,
+			Type:  "F",
+		}, nil
+	case "N":
+		return Arg{
+			Value: nil,
+			Type:  "N",
+		}, nil
+	default:
+		return Arg{}, fmt.Errorf("unsupported OSC arg type: %s", oscType)
+	}
 }
