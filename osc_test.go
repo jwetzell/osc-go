@@ -1,8 +1,9 @@
 package osc
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestGoodOSCArgsToBuffer(t *testing.T) {
@@ -199,13 +200,8 @@ func TestGoodOSCArgsToBuffer(t *testing.T) {
 
 			got, err := argsToBuffer(testCase.args)
 
-			if err != nil {
-				t.Fatalf("failed to encode properly: %s", err.Error())
-			}
-
-			if !reflect.DeepEqual(got, testCase.expected) {
-				t.Fatalf("failed to encode properly got '%v', expected '%v'", got, testCase.expected)
-			}
+			require.NoError(t, err)
+			require.Equal(t, testCase.expected, got)
 		})
 	}
 }
@@ -221,15 +217,10 @@ func TestBadOSCArgsToBuffer(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 
-			got, err := argsToBuffer(testCase.args)
+			_, err := argsToBuffer(testCase.args)
 
-			if err == nil {
-				t.Fatalf("argsToBuffer expected to fail but got: %+v", got)
-			}
-
-			if err.Error() != testCase.errorString {
-				t.Fatalf("argsToBuffer got error '%s', expected '%s'", err.Error(), testCase.errorString)
-			}
+			require.Error(t, err)
+			require.EqualError(t, err, testCase.errorString)
 		})
 	}
 }
@@ -270,17 +261,9 @@ func TestGoodPacketFromBytes(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			got, remainingBytes, err := PacketFromBytes(testCase.bytes)
 
-			if err != nil {
-				t.Fatalf("failed to decode properly: %s", err.Error())
-			}
-
-			if len(remainingBytes) != 0 {
-				t.Fatalf("failed to decode properly, expected no remaining bytes but got: %v", remainingBytes)
-			}
-
-			if !reflect.DeepEqual(got, testCase.expected) {
-				t.Fatalf("failed to decode properly got '%v', expected '%v'", got, testCase.expected)
-			}
+			require.NoError(t, err)
+			require.Empty(t, remainingBytes)
+			require.Equal(t, testCase.expected, got)
 		})
 	}
 }
@@ -316,15 +299,10 @@ func TestBadPacketFromBytes(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			got, _, err := PacketFromBytes(testCase.bytes)
+			_, _, err := PacketFromBytes(testCase.bytes)
 
-			if err == nil {
-				t.Fatalf("PacketFromBytes expected to fail but got: %+v", got)
-			}
-
-			if err.Error() != testCase.errorString {
-				t.Fatalf("PacketFromBytes got error '%s', expected '%s'", err.Error(), testCase.errorString)
-			}
+			require.Error(t, err)
+			require.EqualError(t, err, testCase.errorString)
 		})
 	}
 }

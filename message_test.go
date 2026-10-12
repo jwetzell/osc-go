@@ -2,9 +2,9 @@ package osc
 
 import (
 	"math"
-	"reflect"
-	"slices"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestGoodOSCMessageEncoding(t *testing.T) {
@@ -131,13 +131,8 @@ func TestGoodOSCMessageEncoding(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			got, err := testCase.message.ToBytes()
 
-			if err != nil {
-				t.Fatalf("failed to encode properly: %s", err.Error())
-			}
-
-			if !reflect.DeepEqual(got, testCase.expected) {
-				t.Fatalf("failed to encode properly got '%v', expected '%v'", got, testCase.expected)
-			}
+			require.NoError(t, err)
+			require.Equal(t, testCase.expected, got)
 		})
 	}
 
@@ -243,15 +238,11 @@ func TestBadOSCMessageEncoding(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			got, err := testCase.message.ToBytes()
+			_, err := testCase.message.ToBytes()
 
-			if err == nil {
-				t.Fatalf("OSCMessage.ToBytes() expected to fail but got: %+v", got)
-			}
+			require.Error(t, err)
 
-			if err.Error() != testCase.errorString {
-				t.Fatalf("OSCMessage.ToBytes() got error '%s', expected '%s'", err.Error(), testCase.errorString)
-			}
+			require.EqualError(t, err, testCase.errorString)
 		})
 	}
 }
@@ -260,69 +251,69 @@ func TestGoodOSCMessageDecoding(t *testing.T) {
 	testCases := []struct {
 		name     string
 		bytes    []byte
-		expected Message
+		expected *Message
 	}{
 		{
 			name:     "simple address no args",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 0, 0, 0},
-			expected: Message{Address: "/hello", Args: []Arg{}},
+			expected: &Message{Address: "/hello", Args: []Arg{}},
 		},
 		{
 			name:     "simple address string arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 115, 0, 0, 97, 114, 103, 49, 0, 0, 0, 0},
-			expected: Message{Address: "/hello", Args: []Arg{{Type: "s", Value: "arg1"}}},
+			expected: &Message{Address: "/hello", Args: []Arg{{Type: "s", Value: "arg1"}}},
 		},
 		{
 			name:     "simple address integer arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 105, 0, 0, 0, 0, 0, 35},
-			expected: Message{Address: "/hello", Args: []Arg{{Type: "i", Value: int32(35)}}},
+			expected: &Message{Address: "/hello", Args: []Arg{{Type: "i", Value: int32(35)}}},
 		},
 		{
 			name:     "simple address float arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 102, 0, 0, 66, 10, 0, 0},
-			expected: Message{Address: "/hello", Args: []Arg{{Type: "f", Value: float32(34.5)}}},
+			expected: &Message{Address: "/hello", Args: []Arg{{Type: "f", Value: float32(34.5)}}},
 		},
 		{
 			name:     "simple address blob arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 98, 0, 0, 0, 0, 0, 4, 98, 108, 111, 98},
-			expected: Message{Address: "/hello", Args: []Arg{{Type: "b", Value: []byte{98, 108, 111, 98}}}},
+			expected: &Message{Address: "/hello", Args: []Arg{{Type: "b", Value: []byte{98, 108, 111, 98}}}},
 		},
 		{
 			name:     "simple address True arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 84, 0, 0},
-			expected: Message{Address: "/hello", Args: []Arg{{Type: "T", Value: true}}},
+			expected: &Message{Address: "/hello", Args: []Arg{{Type: "T", Value: true}}},
 		},
 		{
 			name:     "simple address False arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 70, 0, 0},
-			expected: Message{Address: "/hello", Args: []Arg{{Type: "F", Value: false}}},
+			expected: &Message{Address: "/hello", Args: []Arg{{Type: "F", Value: false}}},
 		},
 		{
 			name:     "simple address color arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 114, 0, 0, 20, 21, 22, 10},
-			expected: Message{Address: "/hello", Args: []Arg{{Type: "r", Value: Color{R: 20, G: 21, B: 22, A: 10}}}},
+			expected: &Message{Address: "/hello", Args: []Arg{{Type: "r", Value: Color{R: 20, G: 21, B: 22, A: 10}}}},
 		},
 		{
 			name:     "simple address nil arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 78, 0, 0},
-			expected: Message{Address: "/hello", Args: []Arg{{Type: "N", Value: nil}}},
+			expected: &Message{Address: "/hello", Args: []Arg{{Type: "N", Value: nil}}},
 		},
 		{
 			name:     "simple address Inifinitum arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 73, 0, 0},
-			expected: Message{Address: "/hello", Args: []Arg{{Type: "I", Value: math.MaxInt32}}},
+			expected: &Message{Address: "/hello", Args: []Arg{{Type: "I", Value: math.MaxInt32}}},
 		},
 		{
 			name:     "simple address int64 arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 104, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255},
-			expected: Message{Address: "/hello", Args: []Arg{{Type: "h", Value: int64(281474976710655)}}},
+			expected: &Message{Address: "/hello", Args: []Arg{{Type: "h", Value: int64(281474976710655)}}},
 		},
 		{
 			name: "simple address float64 arg",
 			bytes: []byte{
 				47, 104, 101, 108, 108, 111, 0, 0, 44, 100, 0, 0, 0x40, 0x29, 0x87, 0xec, 0x82, 0x74, 0xb9, 0xe6,
 			},
-			expected: Message{Address: "/hello", Args: []Arg{{Type: "d", Value: float64(12.7654763)}}},
+			expected: &Message{Address: "/hello", Args: []Arg{{Type: "d", Value: float64(12.7654763)}}},
 		},
 		// TODO(jwetzell): support OSC array
 		// {
@@ -331,7 +322,7 @@ func TestGoodOSCMessageDecoding(t *testing.T) {
 		// 		47, 104, 101, 108, 108, 111, 0, 0, 44, 91, 100, 105, 93, 0, 0, 0, 0x40, 0x29, 0x87, 0xec, 0x82, 0x74, 0xb9, 0xe6,
 		// 		0, 0, 3, 232,
 		// 	},
-		// 	expected: OSCMessage{
+		// 	expected: &Message{
 		// 		Address: "/hello",
 		// 		Args: []OSCArg{
 		// 			[]OSCArg{
@@ -344,7 +335,7 @@ func TestGoodOSCMessageDecoding(t *testing.T) {
 		{
 			name:  "simple address no type string",
 			bytes: []byte{47, 104, 101, 108, 108, 111, 0, 0},
-			expected: Message{
+			expected: &Message{
 				Address: "/hello",
 				Args:    []Arg{},
 			},
@@ -355,7 +346,7 @@ func TestGoodOSCMessageDecoding(t *testing.T) {
 				47, 111, 115, 99, 105, 108, 108, 97, 116, 111, 114, 47, 52, 47, 102, 114, 101, 113, 117, 101, 110, 99, 121, 0, 44,
 				102, 0, 0, 67, 220, 0, 0,
 			},
-			expected: Message{Address: "/oscillator/4/frequency", Args: []Arg{{Type: "f", Value: float32(440)}}},
+			expected: &Message{Address: "/oscillator/4/frequency", Args: []Arg{{Type: "f", Value: float32(440)}}},
 		},
 		{
 			name: "osc 1.0 spec example 2",
@@ -363,7 +354,7 @@ func TestGoodOSCMessageDecoding(t *testing.T) {
 				47, 102, 111, 111, 0, 0, 0, 0, 44, 105, 105, 115, 102, 102, 0, 0, 0, 0, 3, 232, 255, 255, 255, 255, 104, 101, 108,
 				108, 111, 0, 0, 0, 63, 157, 243, 182, 64, 181, 178, 45,
 			},
-			expected: Message{
+			expected: &Message{
 				Address: "/foo",
 				Args: []Arg{
 					{Type: "i", Value: int32(1000)},
@@ -382,17 +373,9 @@ func TestGoodOSCMessageDecoding(t *testing.T) {
 
 			actual, err := MessageFromBytes(testCase.bytes)
 
-			if err != nil {
-				t.Fatalf("failed to encode properly: %s", err.Error())
-			}
+			require.NoError(t, err)
 
-			if !reflect.DeepEqual(actual.Address, testCase.expected.Address) {
-				t.Fatalf("failed to encode address propertly got '%s', expected '%s'", actual.Address, testCase.expected.Address)
-			}
-
-			if !reflect.DeepEqual(actual.Args, testCase.expected.Args) {
-				t.Fatalf("failed to encode args properly got '%+v', expected '%+v'", actual.Args, testCase.expected.Args)
-			}
+			require.Equal(t, testCase.expected, actual)
 		})
 	}
 }
@@ -526,15 +509,11 @@ func TestBadOSCMessageDecoding(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			got, err := MessageFromBytes(testCase.bytes)
+			_, err := MessageFromBytes(testCase.bytes)
 
-			if err == nil {
-				t.Fatalf("MessageFromBytes expected to fail but got: %+v", got)
-			}
+			require.Error(t, err)
 
-			if err.Error() != testCase.errorString {
-				t.Fatalf("MessageFromBytes got error '%s', expected '%s'", err.Error(), testCase.errorString)
-			}
+			require.EqualError(t, err, testCase.errorString)
 		})
 	}
 }
@@ -548,17 +527,11 @@ func TestOSCMessageMarshalBinary(t *testing.T) {
 	}
 
 	got, err := message.MarshalBinary()
-	if err != nil {
-		t.Fatalf("Message.MarshalBinary failed: %s", err.Error())
-	}
+	require.NoError(t, err)
 
 	expected, err := message.ToBytes()
-	if err != nil {
-		t.Fatalf("Message.ToBytes failed: %s", err.Error())
-	}
-	if !slices.Equal(got, expected) {
-		t.Fatalf("Message.MarshalBinary output does not match Message.ToBytes output")
-	}
+	require.NoError(t, err)
+	require.Equal(t, expected, got)
 }
 
 func TestGoodOSCMessageUnmarshalBinary(t *testing.T) {
@@ -567,18 +540,12 @@ func TestGoodOSCMessageUnmarshalBinary(t *testing.T) {
 	bytes := []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 105, 0, 0, 0, 0, 0, 35}
 
 	err := message.UnmarshalBinary(bytes)
-	if err != nil {
-		t.Fatalf("Message.UnmarshalBinary failed: %s", err.Error())
-	}
+	require.NoError(t, err)
 
 	expected, err := MessageFromBytes(bytes)
-	if err != nil {
-		t.Fatalf("MessageFromBytes failed: %s", err.Error())
-	}
+	require.NoError(t, err)
 
-	if !reflect.DeepEqual(message, expected) {
-		t.Fatalf("Message.UnmarshalBinary result does not match MessageFromBytes result.\nGot: %+v\nExpected: %+v", message, expected)
-	}
+	require.Equal(t, expected, message)
 }
 
 func TestBadOSCMessageUnmarshalBinary(t *testing.T) {
@@ -586,16 +553,12 @@ func TestBadOSCMessageUnmarshalBinary(t *testing.T) {
 
 	bytes := []byte{}
 
-	got := message.UnmarshalBinary(bytes)
-	if got == nil {
-		t.Fatalf("Message.UnmarshalBinary expected to fail but got no error")
-	}
+	gotErr := message.UnmarshalBinary(bytes)
+	require.Error(t, gotErr)
 
-	_, expected := MessageFromBytes(bytes)
+	_, expectedErr := MessageFromBytes(bytes)
 
-	if got.Error() != expected.Error() {
-		t.Fatalf("Message.UnmarshalBinary got error '%s', expected '%s'", got.Error(), expected.Error())
-	}
+	require.EqualError(t, gotErr, expectedErr.Error())
 }
 
 func BenchmarkMessageToBytes(b *testing.B) {
@@ -608,9 +571,7 @@ func BenchmarkMessageToBytes(b *testing.B) {
 
 	for b.Loop() {
 		_, err := message.ToBytes()
-		if err != nil {
-			b.Fatalf("failed to encode properly: %s", err.Error())
-		}
+		require.NoError(b, err)
 	}
 }
 
@@ -619,9 +580,7 @@ func BenchmarkMessageFromBytes(b *testing.B) {
 
 	for b.Loop() {
 		_, err := MessageFromBytes(bytes)
-		if err != nil {
-			b.Fatalf("failed to decode properly: %s", err.Error())
-		}
+		require.NoError(b, err)
 	}
 }
 
