@@ -104,26 +104,14 @@ func argsToBuffer(args []Arg) ([]byte, error) {
 				valueBytes := int32ToOSCBytes(int32(value))
 				argBuffers = append(argBuffers, valueBytes...)
 			} else {
-				return nil, errors.New("OSC arg had int32 type but non-number value")
+				return nil, errors.New("OSC arg had int32 type but non-int32 compatible value")
 			}
 		case "f":
 			if value, ok := arg.Value.(float32); ok {
 				valueBytes := float32ToOSCBytes(value)
 				argBuffers = append(argBuffers, valueBytes...)
-			} else if value, ok := arg.Value.(float64); ok {
-				valueBytes := float32ToOSCBytes(float32(value))
-				argBuffers = append(argBuffers, valueBytes...)
-			} else if value, ok := arg.Value.(int); ok {
-				valueBytes := float32ToOSCBytes(float32(value))
-				argBuffers = append(argBuffers, valueBytes...)
-			} else if value, ok := arg.Value.(int32); ok {
-				valueBytes := float32ToOSCBytes(float32(value))
-				argBuffers = append(argBuffers, valueBytes...)
-			} else if value, ok := arg.Value.(int64); ok {
-				valueBytes := float32ToOSCBytes(float32(value))
-				argBuffers = append(argBuffers, valueBytes...)
 			} else {
-				return nil, errors.New("OSC arg had float32 type but non-number value")
+				return nil, errors.New("OSC arg had float32 type but non-float32 compatible value")
 			}
 		case "b":
 			if value, ok := arg.Value.([]byte); ok {
@@ -160,7 +148,7 @@ func argsToBuffer(args []Arg) ([]byte, error) {
 				valueBytes := int64ToOSCBytes(value)
 				argBuffers = append(argBuffers, valueBytes...)
 			} else {
-				return nil, errors.New("OSC arg had int64 type but non-number value")
+				return nil, errors.New("OSC arg had int64 type but non-int64 compatible value")
 			}
 		case "d":
 			if value, ok := arg.Value.(float32); ok {
@@ -175,11 +163,8 @@ func argsToBuffer(args []Arg) ([]byte, error) {
 			} else if value, ok := arg.Value.(int32); ok {
 				valueBytes := float64ToOSCBytes(float64(value))
 				argBuffers = append(argBuffers, valueBytes...)
-			} else if value, ok := arg.Value.(int64); ok {
-				valueBytes := float64ToOSCBytes(float64(value))
-				argBuffers = append(argBuffers, valueBytes...)
 			} else {
-				return nil, errors.New("OSC arg had float64 type but non-number value")
+				return nil, errors.New("OSC arg had float64 type but non-float64 compatible value")
 			}
 		default:
 			return nil, fmt.Errorf("unsupported OSC argument type: %s", arg.Type)
