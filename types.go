@@ -10,8 +10,8 @@ type Bundle struct {
 }
 
 type Arg struct {
-	Value any    `json:"value"`
-	Type  string `json:"type"`
+	Value any  `json:"value"`
+	Type  rune `json:"type"`
 }
 
 type Message struct {

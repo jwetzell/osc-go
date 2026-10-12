@@ -17,13 +17,10 @@ func (m *Message) ToBytes() ([]byte, error) {
 	typeString := ","
 
 	for _, arg := range m.Args {
-		if arg.Type == "" {
+		if arg.Type == 0 {
 			return nil, errors.New("OSC Message argument type cannot be empty")
 		}
-		if len(arg.Type) != 1 {
-			return nil, errors.New("OSC Message argument type must be a single character")
-		}
-		typeString += arg.Type
+		typeString += string(arg.Type)
 	}
 	addressBuffer := stringToOSCBytes(m.Address)
 
@@ -91,7 +88,7 @@ func MessageFromBytes(bytes []byte) (*Message, error) {
 				return nil, errors.New("type string is malformed")
 			}
 		} else {
-			oscArg, remainingBytes, err := readOSCArg(argBytes, string(oscType))
+			oscArg, remainingBytes, err := readOSCArg(argBytes, oscType)
 			if err != nil {
 				return nil, err
 			}

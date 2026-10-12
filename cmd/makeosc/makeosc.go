@@ -38,7 +38,15 @@ func main() {
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			address := cmd.String("address")
 			args := cmd.StringSlice("arg")
-			types := cmd.StringSlice("type")
+			types := []rune{}
+			for _, t := range cmd.StringSlice("type") {
+				if len(t) > 0 {
+					if len(t) > 1 {
+						return fmt.Errorf("OSC type should be a single character, got: %s", t)
+					}
+					types = append(types, []rune(t)[0])
+				}
+			}
 			slip := cmd.Bool("slip")
 			makeMsg(address, args, types, slip)
 			return nil
@@ -74,7 +82,7 @@ func slipEncode(bytes []byte) []byte {
 	return encodedBytes
 }
 
-func makeMsg(address string, args []string, types []string, slip bool) {
+func makeMsg(address string, args []string, types []rune, slip bool) {
 
 	oscMessage := osc.Message{
 		Address: address,
@@ -82,7 +90,7 @@ func makeMsg(address string, args []string, types []string, slip bool) {
 	}
 
 	for index, arg := range args {
-		oscType := "s"
+		oscType := 's'
 		if len(types) > index {
 			oscType = types[index]
 		}

@@ -90,13 +90,13 @@ func argsToBuffer(args []Arg) ([]byte, error) {
 
 	for _, arg := range args {
 		switch arg.Type {
-		case "s":
+		case 's':
 			if value, ok := arg.Value.(string); ok {
 				argBuffers = append(argBuffers, stringToOSCBytes(value)...)
 			} else {
 				return nil, errors.New("OSC arg had string type but non-string value")
 			}
-		case "i":
+		case 'i':
 			if value, ok := arg.Value.(int); ok {
 				valueBytes := int32ToOSCBytes(int32(value))
 				argBuffers = append(argBuffers, valueBytes...)
@@ -106,29 +106,29 @@ func argsToBuffer(args []Arg) ([]byte, error) {
 			} else {
 				return nil, errors.New("OSC arg had int32 type but non-int32 compatible value")
 			}
-		case "f":
+		case 'f':
 			if value, ok := arg.Value.(float32); ok {
 				valueBytes := float32ToOSCBytes(value)
 				argBuffers = append(argBuffers, valueBytes...)
 			} else {
 				return nil, errors.New("OSC arg had float32 type but non-float32 compatible value")
 			}
-		case "b":
+		case 'b':
 			if value, ok := arg.Value.([]byte); ok {
 				valueBytes := byteArrayToOSCBytes(value)
 				argBuffers = append(argBuffers, valueBytes...)
 			} else {
 				return nil, errors.New("OSC arg had blob type but non-blob value")
 			}
-		case "T":
+		case 'T':
 			continue
-		case "F":
+		case 'F':
 			continue
-		case "N":
+		case 'N':
 			continue
-		case "I":
+		case 'I':
 			continue
-		case "r":
+		case 'r':
 			color, ok := arg.Value.(Color)
 			if !ok {
 				return nil, errors.New("OSC arg had color type but non-color value")
@@ -137,7 +137,7 @@ func argsToBuffer(args []Arg) ([]byte, error) {
 				colorBytes := []byte{color.R, color.G, color.B, color.A}
 				argBuffers = append(argBuffers, colorBytes...)
 			}
-		case "h":
+		case 'h':
 			if value, ok := arg.Value.(int); ok {
 				valueBytes := int64ToOSCBytes(int64(value))
 				argBuffers = append(argBuffers, valueBytes...)
@@ -150,7 +150,7 @@ func argsToBuffer(args []Arg) ([]byte, error) {
 			} else {
 				return nil, errors.New("OSC arg had int64 type but non-int64 compatible value")
 			}
-		case "d":
+		case 'd':
 			if value, ok := arg.Value.(float32); ok {
 				valueBytes := float64ToOSCBytes(float64(value))
 				argBuffers = append(argBuffers, valueBytes...)
@@ -167,7 +167,7 @@ func argsToBuffer(args []Arg) ([]byte, error) {
 				return nil, errors.New("OSC arg had float64 type but non-float64 compatible value")
 			}
 		default:
-			return nil, fmt.Errorf("unsupported OSC argument type: %s", arg.Type)
+			return nil, fmt.Errorf("unsupported OSC argument type: %c", arg.Type)
 		}
 	}
 	return argBuffers, nil
@@ -289,7 +289,7 @@ func readOSCTimeTag(bytes []byte) (TimeTag, []byte, error) {
 		nil
 }
 
-func readOSCArg(bytes []byte, oscType string) (Arg, []byte, error) {
+func readOSCArg(bytes []byte, oscType rune) (Arg, []byte, error) {
 	var readArgError error
 
 	oscArg := Arg{}
@@ -297,68 +297,68 @@ func readOSCArg(bytes []byte, oscType string) (Arg, []byte, error) {
 
 	var remainingBytes []byte
 	switch oscType {
-	case "s":
+	case 's':
 		argString, bytesLeft, err := readOSCString(bytes)
 		if err != nil {
 			return Arg{}, bytes, err
 		}
 		oscArg.Value = argString
 		remainingBytes = bytesLeft
-	case "i":
+	case 'i':
 		argInt, bytesLeft, err := readOSCInt32(bytes)
 		if err != nil {
 			readArgError = err
 		}
 		oscArg.Value = argInt
 		remainingBytes = bytesLeft
-	case "f":
+	case 'f':
 		argFloat, bytesLeft, err := readOSCFloat32(bytes)
 		if err != nil {
 			readArgError = err
 		}
 		oscArg.Value = argFloat
 		remainingBytes = bytesLeft
-	case "b":
+	case 'b':
 		argBytes, bytesLeft, err := readOSCBlob(bytes)
 		if err != nil {
 			readArgError = err
 		}
 		oscArg.Value = argBytes
 		remainingBytes = bytesLeft
-	case "T":
+	case 'T':
 		oscArg.Value = true
 		remainingBytes = bytes
-	case "F":
+	case 'F':
 		oscArg.Value = false
 		remainingBytes = bytes
-	case "N":
+	case 'N':
 		oscArg.Value = nil
 		remainingBytes = bytes
-	case "I":
+	case 'I':
 		oscArg.Value = math.MaxInt32
 		remainingBytes = bytes
-	case "r":
+	case 'r':
 		argColor, bytesLeft, err := readOSCColor(bytes)
 		if err != nil {
 			readArgError = err
 		}
 		oscArg.Value = argColor
 		remainingBytes = bytesLeft
-	case "h":
+	case 'h':
 		argInt, bytesLeft, err := readOSCInt64(bytes)
 		if err != nil {
 			readArgError = err
 		}
 		oscArg.Value = argInt
 		remainingBytes = bytesLeft
-	case "d":
+	case 'd':
 		argFloat, bytesLeft, err := readOSCFloat64(bytes)
 		if err != nil {
 			readArgError = err
 		}
 		oscArg.Value = argFloat
 		remainingBytes = bytesLeft
-	case "t":
+	case 't':
 		argTimeTag, bytesLeft, err := readOSCTimeTag(bytes)
 		if err != nil {
 			readArgError = err
@@ -366,7 +366,7 @@ func readOSCArg(bytes []byte, oscType string) (Arg, []byte, error) {
 		oscArg.Value = argTimeTag
 		remainingBytes = bytesLeft
 	default:
-		return Arg{}, bytes, fmt.Errorf("unsupported OSC argument type: %s", oscType)
+		return Arg{}, bytes, fmt.Errorf("unsupported OSC argument type: %c", oscType)
 	}
 	return oscArg, remainingBytes, readArgError
 }
