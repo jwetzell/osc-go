@@ -1,8 +1,9 @@
-package osc
+package osc_test
 
 import (
 	"testing"
 
+	"github.com/jwetzell/osc-go"
 	"github.com/stretchr/testify/require"
 )
 
@@ -10,25 +11,25 @@ func TestGoodPacketFromBytes(t *testing.T) {
 
 	testCases := []struct {
 		name     string
-		expected Packet
+		expected osc.Packet
 		bytes    []byte
 	}{
 		{
 			name: "message with no args",
-			expected: &Message{
+			expected: &osc.Message{
 				Address: "/hello",
-				Args:    []Arg{},
+				Args:    []osc.Arg{},
 			},
 			bytes: []byte{47, 104, 101, 108, 108, 111, 0, 0},
 		},
 		{
 			name: "bundle with one message with no args",
-			expected: &Bundle{
-				TimeTag: TimeTag{
+			expected: &osc.Bundle{
+				TimeTag: osc.TimeTag{
 					Seconds:           32,
 					FractionalSeconds: 0,
 				},
-				Contents: []Packet{&Message{Address: "/oscillator/4/frequency", Args: []Arg{{Type: "f", Value: float32(440)}}}},
+				Contents: []osc.Packet{&osc.Message{Address: "/oscillator/4/frequency", Args: []osc.Arg{{Type: "f", Value: float32(440)}}}},
 			},
 			bytes: []byte{35, 98, 117, 110, 100, 108, 101, 0, 0, 0, 0,
 				32, 0, 0, 0, 0, 0, 0, 0, 32, 47, 111,
@@ -40,7 +41,7 @@ func TestGoodPacketFromBytes(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			got, remainingBytes, err := PacketFromBytes(testCase.bytes)
+			got, remainingBytes, err := osc.PacketFromBytes(testCase.bytes)
 
 			require.NoError(t, err)
 			require.Empty(t, remainingBytes)
@@ -80,7 +81,7 @@ func TestBadPacketFromBytes(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			_, _, err := PacketFromBytes(testCase.bytes)
+			_, _, err := osc.PacketFromBytes(testCase.bytes)
 
 			require.Error(t, err)
 			require.EqualError(t, err, testCase.errorString)
