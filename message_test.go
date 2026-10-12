@@ -1,9 +1,10 @@
-package osc
+package osc_test
 
 import (
 	"math"
 	"testing"
 
+	"github.com/jwetzell/osc-go"
 	"github.com/stretchr/testify/require"
 )
 
@@ -11,22 +12,22 @@ func TestGoodOSCMessageEncoding(t *testing.T) {
 
 	testCases := []struct {
 		name     string
-		message  *Message
+		message  *osc.Message
 		expected []byte
 	}{
 		{
 			name: "simple hello",
-			message: &Message{
+			message: &osc.Message{
 				Address: "/hello",
-				Args:    []Arg{},
+				Args:    []osc.Arg{},
 			},
 			expected: []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 0, 0, 0},
 		},
 		{
 			name: "simple address string arg",
-			message: &Message{
+			message: &osc.Message{
 				Address: "/hello",
-				Args: []Arg{
+				Args: []osc.Arg{
 					{
 						Type:  "s",
 						Value: "arg1",
@@ -37,93 +38,93 @@ func TestGoodOSCMessageEncoding(t *testing.T) {
 		},
 		{
 			name:     "simple address 'i' arg int value",
-			message:  &Message{Address: "/hello", Args: []Arg{{Type: "i", Value: int(35)}}},
+			message:  &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "i", Value: int(35)}}},
 			expected: []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 105, 0, 0, 0, 0, 0, 35},
 		},
 		{
 			name:     "simple address 'i' arg int32 value",
-			message:  &Message{Address: "/hello", Args: []Arg{{Type: "i", Value: int32(35)}}},
+			message:  &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "i", Value: int32(35)}}},
 			expected: []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 105, 0, 0, 0, 0, 0, 35},
 		},
 		{
 			name:     "simple address 'f' arg float32 value",
-			message:  &Message{Address: "/hello", Args: []Arg{{Type: "f", Value: float32(34.5)}}},
+			message:  &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "f", Value: float32(34.5)}}},
 			expected: []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 102, 0, 0, 66, 10, 0, 0},
 		},
 		{
 			name:     "simple address blob arg",
-			message:  &Message{Address: "/hello", Args: []Arg{{Type: "b", Value: []byte{98, 108, 111, 98}}}},
+			message:  &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "b", Value: []byte{98, 108, 111, 98}}}},
 			expected: []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 98, 0, 0, 0, 0, 0, 4, 98, 108, 111, 98},
 		},
 		{
 			name:     "simple address blob arg with padding",
-			message:  &Message{Address: "/hello", Args: []Arg{{Type: "b", Value: []byte{98, 108, 111}}}},
+			message:  &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "b", Value: []byte{98, 108, 111}}}},
 			expected: []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 98, 0, 0, 0, 0, 0, 3, 98, 108, 111, 0},
 		},
 		{
 			name:     "simple address True arg",
-			message:  &Message{Address: "/hello", Args: []Arg{{Type: "T", Value: true}}},
+			message:  &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "T", Value: true}}},
 			expected: []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 84, 0, 0},
 		},
 		{
 			name:     "simple address False arg",
-			message:  &Message{Address: "/hello", Args: []Arg{{Type: "F", Value: false}}},
+			message:  &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "F", Value: false}}},
 			expected: []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 70, 0, 0},
 		},
 		{
 			name:     "simple address Infinitum arg",
-			message:  &Message{Address: "/hello", Args: []Arg{{Type: "I", Value: math.MaxInt32}}},
+			message:  &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "I", Value: math.MaxInt32}}},
 			expected: []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 73, 0, 0},
 		},
 		{
 			name:     "simple address color arg",
-			message:  &Message{Address: "/hello", Args: []Arg{{Type: "r", Value: Color{R: 20, G: 21, B: 22, A: 10}}}},
+			message:  &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "r", Value: osc.Color{R: 20, G: 21, B: 22, A: 10}}}},
 			expected: []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 114, 0, 0, 20, 21, 22, 10},
 		},
 		{
 			name:     "simple address nil arg",
-			message:  &Message{Address: "/hello", Args: []Arg{{Type: "N", Value: nil}}},
+			message:  &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "N", Value: nil}}},
 			expected: []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 78, 0, 0},
 		},
 		{
 			name:     "simple address 'h' arg int64 value",
-			message:  &Message{Address: "/hello", Args: []Arg{{Type: "h", Value: int64(281474976710655)}}},
+			message:  &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "h", Value: int64(281474976710655)}}},
 			expected: []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 104, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255},
 		},
 		{
 			name:     "simple address 'h' arg int32 value",
-			message:  &Message{Address: "/hello", Args: []Arg{{Type: "h", Value: int32(10)}}},
+			message:  &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "h", Value: int32(10)}}},
 			expected: []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 104, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10},
 		},
 		{
 			name:     "simple address 'h' arg int value",
-			message:  &Message{Address: "/hello", Args: []Arg{{Type: "h", Value: int(25)}}},
+			message:  &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "h", Value: int(25)}}},
 			expected: []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 104, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25},
 		},
 		{
 			name:    "simple address 'd' arg float64 value",
-			message: &Message{Address: "/hello", Args: []Arg{{Type: "d", Value: float64(12.7654763)}}},
+			message: &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "d", Value: float64(12.7654763)}}},
 			expected: []byte{
 				47, 104, 101, 108, 108, 111, 0, 0, 44, 100, 0, 0, 0x40, 0x29, 0x87, 0xec, 0x82, 0x74, 0xb9, 0xe6,
 			},
 		},
 		{
 			name:    "simple address 'd' arg float32 value",
-			message: &Message{Address: "/hello", Args: []Arg{{Type: "d", Value: float32(12.76)}}},
+			message: &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "d", Value: float32(12.76)}}},
 			expected: []byte{
 				47, 104, 101, 108, 108, 111, 0, 0, 44, 100, 0, 0, 0x40, 0x29, 0x85, 0x1e, 0xc0, 0x00, 0x00, 0x00,
 			},
 		},
 		{
 			name:    "simple address 'd' arg int32 value",
-			message: &Message{Address: "/hello", Args: []Arg{{Type: "d", Value: int32(12)}}},
+			message: &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "d", Value: int32(12)}}},
 			expected: []byte{
 				47, 104, 101, 108, 108, 111, 0, 0, 44, 100, 0, 0, 0x40, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 			},
 		},
 		{
 			name:    "simple address 'd' arg int value",
-			message: &Message{Address: "/hello", Args: []Arg{{Type: "d", Value: int(12)}}},
+			message: &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "d", Value: int(12)}}},
 			expected: []byte{
 				47, 104, 101, 108, 108, 111, 0, 0, 44, 100, 0, 0, 0x40, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 			},
@@ -147,7 +148,7 @@ func TestGoodOSCMessageEncoding(t *testing.T) {
 		// },
 		{
 			name:    "osc 1.0 spec example 1",
-			message: &Message{Address: "/oscillator/4/frequency", Args: []Arg{{Type: "f", Value: float32(440)}}},
+			message: &osc.Message{Address: "/oscillator/4/frequency", Args: []osc.Arg{{Type: "f", Value: float32(440)}}},
 			expected: []byte{
 				47, 111, 115, 99, 105, 108, 108, 97, 116, 111, 114, 47, 52, 47, 102, 114, 101, 113, 117, 101, 110, 99, 121, 0, 44,
 				102, 0, 0, 67, 220, 0, 0,
@@ -155,9 +156,9 @@ func TestGoodOSCMessageEncoding(t *testing.T) {
 		},
 		{
 			name: "osc 1.0 spec example 2",
-			message: &Message{
+			message: &osc.Message{
 				Address: "/foo",
-				Args: []Arg{
+				Args: []osc.Arg{
 					{Type: "i", Value: int32(1000)},
 					{Type: "i", Value: int32(-1)},
 					{Type: "s", Value: "hello"},
@@ -187,96 +188,96 @@ func TestGoodOSCMessageEncoding(t *testing.T) {
 func TestBadOSCMessageEncoding(t *testing.T) {
 	testCases := []struct {
 		name        string
-		message     *Message
+		message     *osc.Message
 		errorString string
 	}{
 		{
 			name:        "empty message",
-			message:     &Message{},
+			message:     &osc.Message{},
 			errorString: "OSC Message must have an address",
 		},
 		{
 			name:        "address does not start with /",
-			message:     &Message{Address: "hello"},
+			message:     &osc.Message{Address: "hello"},
 			errorString: "OSC Message address must start with /",
 		},
 		{
 			name: "arg with unsupported type",
-			message: &Message{
+			message: &osc.Message{
 				Address: "/hello",
-				Args:    []Arg{{Type: "x", Value: "unsupported"}},
+				Args:    []osc.Arg{{Type: "x", Value: "unsupported"}},
 			},
 			errorString: "unsupported OSC argument type: x",
 		},
 		{
 			name: "string arg that is not a string",
-			message: &Message{
+			message: &osc.Message{
 				Address: "/hello",
-				Args:    []Arg{{Type: "s", Value: 123}},
+				Args:    []osc.Arg{{Type: "s", Value: 123}},
 			},
 			errorString: "OSC arg had string type but non-string value",
 		},
 		{
 			name: "int32 arg that is not a number",
-			message: &Message{
+			message: &osc.Message{
 				Address: "/hello",
-				Args:    []Arg{{Type: "i", Value: "not an int"}},
+				Args:    []osc.Arg{{Type: "i", Value: "not an int"}},
 			},
 			errorString: "OSC arg had int32 type but non-int32 compatible value",
 		},
 		{
 			name: "float32 arg that is not a number",
-			message: &Message{
+			message: &osc.Message{
 				Address: "/hello",
-				Args:    []Arg{{Type: "f", Value: "not a float"}},
+				Args:    []osc.Arg{{Type: "f", Value: "not a float"}},
 			},
 			errorString: "OSC arg had float32 type but non-float32 compatible value",
 		},
 		{
 			name: "int64 arg that is not a number",
-			message: &Message{
+			message: &osc.Message{
 				Address: "/hello",
-				Args:    []Arg{{Type: "h", Value: "not an int"}},
+				Args:    []osc.Arg{{Type: "h", Value: "not an int"}},
 			},
 			errorString: "OSC arg had int64 type but non-int64 compatible value",
 		},
 		{
 			name: "float64 arg that is not a number",
-			message: &Message{
+			message: &osc.Message{
 				Address: "/hello",
-				Args:    []Arg{{Type: "d", Value: "not a float"}},
+				Args:    []osc.Arg{{Type: "d", Value: "not a float"}},
 			},
 			errorString: "OSC arg had float64 type but non-float64 compatible value",
 		},
 		{
 			name: "blob arg that is not a byte array",
-			message: &Message{
+			message: &osc.Message{
 				Address: "/hello",
-				Args:    []Arg{{Type: "b", Value: "not a blob"}},
+				Args:    []osc.Arg{{Type: "b", Value: "not a blob"}},
 			},
 			errorString: "OSC arg had blob type but non-blob value",
 		},
 		{
 			name: "color arg that is not an OSCColor",
-			message: &Message{
+			message: &osc.Message{
 				Address: "/hello",
-				Args:    []Arg{{Type: "r", Value: "not a color"}},
+				Args:    []osc.Arg{{Type: "r", Value: "not a color"}},
 			},
 			errorString: "OSC arg had color type but non-color value",
 		},
 		{
 			name: "empty arg type",
-			message: &Message{
+			message: &osc.Message{
 				Address: "/hello",
-				Args:    []Arg{{Type: "", Value: "value"}},
+				Args:    []osc.Arg{{Type: "", Value: "value"}},
 			},
 			errorString: "OSC Message argument type cannot be empty",
 		},
 		{
 			name: "arg type longer than one character",
-			message: &Message{
+			message: &osc.Message{
 				Address: "/hello",
-				Args:    []Arg{{Type: "ii", Value: 32}},
+				Args:    []osc.Arg{{Type: "ii", Value: 32}},
 			},
 			errorString: "OSC Message argument type must be a single character",
 		},
@@ -297,69 +298,69 @@ func TestGoodOSCMessageDecoding(t *testing.T) {
 	testCases := []struct {
 		name     string
 		bytes    []byte
-		expected *Message
+		expected *osc.Message
 	}{
 		{
 			name:     "simple address no args",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 0, 0, 0},
-			expected: &Message{Address: "/hello", Args: []Arg{}},
+			expected: &osc.Message{Address: "/hello", Args: []osc.Arg{}},
 		},
 		{
 			name:     "simple address string arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 115, 0, 0, 97, 114, 103, 49, 0, 0, 0, 0},
-			expected: &Message{Address: "/hello", Args: []Arg{{Type: "s", Value: "arg1"}}},
+			expected: &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "s", Value: "arg1"}}},
 		},
 		{
 			name:     "simple address int32 arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 105, 0, 0, 0, 0, 0, 35},
-			expected: &Message{Address: "/hello", Args: []Arg{{Type: "i", Value: int32(35)}}},
+			expected: &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "i", Value: int32(35)}}},
 		},
 		{
 			name:     "simple address float arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 102, 0, 0, 66, 10, 0, 0},
-			expected: &Message{Address: "/hello", Args: []Arg{{Type: "f", Value: float32(34.5)}}},
+			expected: &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "f", Value: float32(34.5)}}},
 		},
 		{
 			name:     "simple address blob arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 98, 0, 0, 0, 0, 0, 4, 98, 108, 111, 98},
-			expected: &Message{Address: "/hello", Args: []Arg{{Type: "b", Value: []byte{98, 108, 111, 98}}}},
+			expected: &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "b", Value: []byte{98, 108, 111, 98}}}},
 		},
 		{
 			name:     "simple address True arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 84, 0, 0},
-			expected: &Message{Address: "/hello", Args: []Arg{{Type: "T", Value: true}}},
+			expected: &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "T", Value: true}}},
 		},
 		{
 			name:     "simple address False arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 70, 0, 0},
-			expected: &Message{Address: "/hello", Args: []Arg{{Type: "F", Value: false}}},
+			expected: &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "F", Value: false}}},
 		},
 		{
 			name:     "simple address color arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 114, 0, 0, 20, 21, 22, 10},
-			expected: &Message{Address: "/hello", Args: []Arg{{Type: "r", Value: Color{R: 20, G: 21, B: 22, A: 10}}}},
+			expected: &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "r", Value: osc.Color{R: 20, G: 21, B: 22, A: 10}}}},
 		},
 		{
 			name:     "simple address nil arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 78, 0, 0},
-			expected: &Message{Address: "/hello", Args: []Arg{{Type: "N", Value: nil}}},
+			expected: &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "N", Value: nil}}},
 		},
 		{
 			name:     "simple address Inifinitum arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 73, 0, 0},
-			expected: &Message{Address: "/hello", Args: []Arg{{Type: "I", Value: math.MaxInt32}}},
+			expected: &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "I", Value: math.MaxInt32}}},
 		},
 		{
 			name:     "simple address int64 arg",
 			bytes:    []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 104, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255},
-			expected: &Message{Address: "/hello", Args: []Arg{{Type: "h", Value: int64(281474976710655)}}},
+			expected: &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "h", Value: int64(281474976710655)}}},
 		},
 		{
 			name: "simple address float64 arg",
 			bytes: []byte{
 				47, 104, 101, 108, 108, 111, 0, 0, 44, 100, 0, 0, 0x40, 0x29, 0x87, 0xec, 0x82, 0x74, 0xb9, 0xe6,
 			},
-			expected: &Message{Address: "/hello", Args: []Arg{{Type: "d", Value: float64(12.7654763)}}},
+			expected: &osc.Message{Address: "/hello", Args: []osc.Arg{{Type: "d", Value: float64(12.7654763)}}},
 		},
 		// TODO(jwetzell): support OSC array
 		// {
@@ -368,10 +369,10 @@ func TestGoodOSCMessageDecoding(t *testing.T) {
 		// 		47, 104, 101, 108, 108, 111, 0, 0, 44, 91, 100, 105, 93, 0, 0, 0, 0x40, 0x29, 0x87, 0xec, 0x82, 0x74, 0xb9, 0xe6,
 		// 		0, 0, 3, 232,
 		// 	},
-		// 	expected: &Message{
+		// 	expected: &osc.Message{
 		// 		Address: "/hello",
-		// 		Args: []Arg{
-		// 			[]Arg{
+		// 		Args: []osc.Arg{
+		// 			[]osc.Arg{
 		// 				{Type: "d", Value: 12.7654763},
 		// 				{Type: "i", Value: 1000},
 		// 			},
@@ -381,9 +382,9 @@ func TestGoodOSCMessageDecoding(t *testing.T) {
 		{
 			name:  "simple address no type string",
 			bytes: []byte{47, 104, 101, 108, 108, 111, 0, 0},
-			expected: &Message{
+			expected: &osc.Message{
 				Address: "/hello",
-				Args:    []Arg{},
+				Args:    []osc.Arg{},
 			},
 		},
 		{
@@ -392,7 +393,7 @@ func TestGoodOSCMessageDecoding(t *testing.T) {
 				47, 111, 115, 99, 105, 108, 108, 97, 116, 111, 114, 47, 52, 47, 102, 114, 101, 113, 117, 101, 110, 99, 121, 0, 44,
 				102, 0, 0, 67, 220, 0, 0,
 			},
-			expected: &Message{Address: "/oscillator/4/frequency", Args: []Arg{{Type: "f", Value: float32(440)}}},
+			expected: &osc.Message{Address: "/oscillator/4/frequency", Args: []osc.Arg{{Type: "f", Value: float32(440)}}},
 		},
 		{
 			name: "osc 1.0 spec example 2",
@@ -400,9 +401,9 @@ func TestGoodOSCMessageDecoding(t *testing.T) {
 				47, 102, 111, 111, 0, 0, 0, 0, 44, 105, 105, 115, 102, 102, 0, 0, 0, 0, 3, 232, 255, 255, 255, 255, 104, 101, 108,
 				108, 111, 0, 0, 0, 63, 157, 243, 182, 64, 181, 178, 45,
 			},
-			expected: &Message{
+			expected: &osc.Message{
 				Address: "/foo",
-				Args: []Arg{
+				Args: []osc.Arg{
 					{Type: "i", Value: int32(1000)},
 					{Type: "i", Value: int32(-1)},
 					{Type: "s", Value: "hello"},
@@ -417,7 +418,7 @@ func TestGoodOSCMessageDecoding(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 
-			actual, err := MessageFromBytes(testCase.bytes)
+			actual, err := osc.MessageFromBytes(testCase.bytes)
 
 			require.NoError(t, err)
 
@@ -555,7 +556,7 @@ func TestBadOSCMessageDecoding(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			_, err := MessageFromBytes(testCase.bytes)
+			_, err := osc.MessageFromBytes(testCase.bytes)
 
 			require.Error(t, err)
 
@@ -565,9 +566,9 @@ func TestBadOSCMessageDecoding(t *testing.T) {
 }
 
 func TestOSCMessageMarshalBinary(t *testing.T) {
-	message := &Message{
+	message := &osc.Message{
 		Address: "/hello",
-		Args: []Arg{
+		Args: []osc.Arg{
 			{Type: "i", Value: 35},
 		},
 	}
@@ -581,36 +582,36 @@ func TestOSCMessageMarshalBinary(t *testing.T) {
 }
 
 func TestGoodOSCMessageUnmarshalBinary(t *testing.T) {
-	message := &Message{}
+	message := &osc.Message{}
 
 	bytes := []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 105, 0, 0, 0, 0, 0, 35}
 
 	err := message.UnmarshalBinary(bytes)
 	require.NoError(t, err)
 
-	expected, err := MessageFromBytes(bytes)
+	expected, err := osc.MessageFromBytes(bytes)
 	require.NoError(t, err)
 
 	require.Equal(t, expected, message)
 }
 
 func TestBadOSCMessageUnmarshalBinary(t *testing.T) {
-	message := &Message{}
+	message := &osc.Message{}
 
 	bytes := []byte{}
 
 	gotErr := message.UnmarshalBinary(bytes)
 	require.Error(t, gotErr)
 
-	_, expectedErr := MessageFromBytes(bytes)
+	_, expectedErr := osc.MessageFromBytes(bytes)
 
 	require.EqualError(t, gotErr, expectedErr.Error())
 }
 
 func BenchmarkMessageToBytes(b *testing.B) {
-	message := &Message{
+	message := &osc.Message{
 		Address: "/hello",
-		Args: []Arg{
+		Args: []osc.Arg{
 			{Type: "i", Value: 35},
 		},
 	}
@@ -625,7 +626,7 @@ func BenchmarkMessageFromBytes(b *testing.B) {
 	bytes := []byte{47, 104, 101, 108, 108, 111, 0, 0, 44, 105, 0, 0, 0, 0, 0, 35}
 
 	for b.Loop() {
-		_, err := MessageFromBytes(bytes)
+		_, err := osc.MessageFromBytes(bytes)
 		require.NoError(b, err)
 	}
 }
@@ -642,6 +643,6 @@ func FuzzMessageFromBytes(f *testing.F) {
 	}
 
 	f.Fuzz(func(t *testing.T, data []byte) {
-		_, _ = MessageFromBytes(data)
+		_, _ = osc.MessageFromBytes(data)
 	})
 }

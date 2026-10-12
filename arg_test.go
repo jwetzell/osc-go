@@ -1,61 +1,62 @@
-package osc
+package osc_test
 
 import (
 	"reflect"
 	"testing"
 
+	"github.com/jwetzell/osc-go"
 	"github.com/stretchr/testify/require"
 )
 
 func TestStringArg(t *testing.T) {
 	expected := "test"
-	arg := StringArg(expected)
+	arg := osc.StringArg(expected)
 	require.Equal(t, "s", arg.Type)
 	require.Equal(t, expected, arg.Value)
 }
 
 func TestInt32Arg(t *testing.T) {
 	expected := int32(10)
-	arg := Int32Arg(expected)
+	arg := osc.Int32Arg(expected)
 	require.Equal(t, "i", arg.Type)
 	require.Equal(t, expected, arg.Value)
 }
 
 func TestFloatArg(t *testing.T) {
 	expected := float32(3.14)
-	arg := FloatArg(expected)
+	arg := osc.FloatArg(expected)
 	require.Equal(t, "f", arg.Type)
 	require.Equal(t, expected, arg.Value)
 }
 
 func TestBlobArg(t *testing.T) {
 	expected := []byte{0x01, 0x02, 0x03}
-	arg := BlobArg(expected)
+	arg := osc.BlobArg(expected)
 	require.Equal(t, "b", arg.Type)
 	require.True(t, reflect.DeepEqual(arg.Value, expected))
 }
 
 func TestTrueArg(t *testing.T) {
-	arg := TrueArg()
+	arg := osc.TrueArg()
 	require.Equal(t, "T", arg.Type)
 	require.Equal(t, true, arg.Value)
 }
 
 func TestFalseArg(t *testing.T) {
-	arg := FalseArg()
+	arg := osc.FalseArg()
 	require.Equal(t, "F", arg.Type)
 	require.Equal(t, false, arg.Value)
 }
 
 func TestNilArg(t *testing.T) {
-	arg := NilArg()
+	arg := osc.NilArg()
 	require.Equal(t, "N", arg.Type)
 	require.Equal(t, nil, arg.Value)
 }
 
 func TestColorArg(t *testing.T) {
-	expected := Color{R: 255, G: 123, B: 222, A: 111}
-	arg := ColorArg(expected.R, expected.G, expected.B, expected.A)
+	expected := osc.Color{R: 255, G: 123, B: 222, A: 111}
+	arg := osc.ColorArg(expected.R, expected.G, expected.B, expected.A)
 
 	require.Equal(t, "r", arg.Type)
 	require.Equal(t, expected, arg.Value)
@@ -63,21 +64,21 @@ func TestColorArg(t *testing.T) {
 
 func TestInt64Arg(t *testing.T) {
 	expected := int64(100)
-	arg := Int64Arg(expected)
+	arg := osc.Int64Arg(expected)
 	require.Equal(t, "h", arg.Type)
 	require.Equal(t, expected, arg.Value)
 }
 
 func TestDoubleArg(t *testing.T) {
 	expected := float64(3.14159)
-	arg := DoubleArg(expected)
+	arg := osc.DoubleArg(expected)
 	require.Equal(t, "d", arg.Type)
 	require.Equal(t, expected, arg.Value)
 }
 
 func TestTimeTagArg(t *testing.T) {
-	expected := TimeTag{Seconds: 12345, FractionalSeconds: 67890}
-	arg := TimeTagArg(expected.Seconds, expected.FractionalSeconds)
+	expected := osc.TimeTag{Seconds: 12345, FractionalSeconds: 67890}
+	arg := osc.TimeTagArg(expected.Seconds, expected.FractionalSeconds)
 
 	require.Equal(t, "t", arg.Type)
 	require.Equal(t, expected, arg.Value)
@@ -88,13 +89,13 @@ func TestGoodArgFromStringAndType(t *testing.T) {
 		name     string
 		rawArg   string
 		oscType  string
-		expected Arg
+		expected osc.Arg
 	}{
 		{
 			name:    "string arg",
 			rawArg:  "hello",
 			oscType: "s",
-			expected: Arg{
+			expected: osc.Arg{
 				Type:  "s",
 				Value: "hello",
 			},
@@ -103,7 +104,7 @@ func TestGoodArgFromStringAndType(t *testing.T) {
 			name:    "int32 arg",
 			rawArg:  "42",
 			oscType: "i",
-			expected: Arg{
+			expected: osc.Arg{
 				Type:  "i",
 				Value: int32(42),
 			},
@@ -112,7 +113,7 @@ func TestGoodArgFromStringAndType(t *testing.T) {
 			name:    "float32 arg",
 			rawArg:  "42.1",
 			oscType: "f",
-			expected: Arg{
+			expected: osc.Arg{
 				Type:  "f",
 				Value: float32(42.1),
 			},
@@ -121,7 +122,7 @@ func TestGoodArgFromStringAndType(t *testing.T) {
 			name:    "blob arg",
 			rawArg:  "68656c6c6f", // "hello" in hex
 			oscType: "b",
-			expected: Arg{
+			expected: osc.Arg{
 				Type:  "b",
 				Value: []byte("hello"),
 			},
@@ -130,7 +131,7 @@ func TestGoodArgFromStringAndType(t *testing.T) {
 			name:    "int64 arg",
 			rawArg:  "42",
 			oscType: "h",
-			expected: Arg{
+			expected: osc.Arg{
 				Type:  "h",
 				Value: int64(42),
 			},
@@ -139,7 +140,7 @@ func TestGoodArgFromStringAndType(t *testing.T) {
 			name:    "float64 arg",
 			rawArg:  "42.1",
 			oscType: "d",
-			expected: Arg{
+			expected: osc.Arg{
 				Type:  "d",
 				Value: float64(42.1),
 			},
@@ -148,7 +149,7 @@ func TestGoodArgFromStringAndType(t *testing.T) {
 			name:    "true arg",
 			rawArg:  "",
 			oscType: "T",
-			expected: Arg{
+			expected: osc.Arg{
 				Type:  "T",
 				Value: true,
 			},
@@ -157,7 +158,7 @@ func TestGoodArgFromStringAndType(t *testing.T) {
 			name:    "false arg",
 			rawArg:  "",
 			oscType: "F",
-			expected: Arg{
+			expected: osc.Arg{
 				Type:  "F",
 				Value: false,
 			},
@@ -166,7 +167,7 @@ func TestGoodArgFromStringAndType(t *testing.T) {
 			name:    "nil arg",
 			rawArg:  "",
 			oscType: "N",
-			expected: Arg{
+			expected: osc.Arg{
 				Type:  "N",
 				Value: nil,
 			},
@@ -175,7 +176,7 @@ func TestGoodArgFromStringAndType(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			got, err := ArgFromStringAndType(testCase.rawArg, testCase.oscType)
+			got, err := osc.ArgFromStringAndType(testCase.rawArg, testCase.oscType)
 
 			require.NoError(t, err)
 			require.Equal(t, testCase.expected, got)
@@ -230,7 +231,7 @@ func TestBadArgFromStringAndType(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			_, err := ArgFromStringAndType(testCase.rawArg, testCase.oscType)
+			_, err := osc.ArgFromStringAndType(testCase.rawArg, testCase.oscType)
 
 			require.Error(t, err)
 			require.EqualError(t, err, testCase.errorMsg)
