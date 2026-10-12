@@ -65,11 +65,18 @@ func main() {
 			port := cmd.Int32("port")
 			address := cmd.String("address")
 			args := cmd.StringSlice("arg")
-			types := cmd.StringSlice("type")
+			types := []rune{}
+			for _, t := range cmd.StringSlice("type") {
+				if len(t) > 0 {
+					if len(t) > 1 {
+						return fmt.Errorf("OSC type should be a single character, got: %s", t)
+					}
+					types = append(types, []rune(t)[0])
+				}
+			}
 			protocol := cmd.String("protocol")
 			slip := cmd.Bool("slip")
-			send(host, port, address, args, types, protocol, slip)
-			return nil
+			return send(host, port, address, args, types, protocol, slip)
 		},
 	}
 
@@ -101,7 +108,7 @@ func slipEncode(bytes []byte) []byte {
 	return encodedBytes
 }
 
-func send(host string, port int32, address string, args []string, types []string, protocol string, slip bool) {
+func send(host string, port int32, address string, args []string, types []rune, protocol string, slip bool) error {
 
 	oscMessage := osc.Message{
 		Address: address,
@@ -109,14 +116,14 @@ func send(host string, port int32, address string, args []string, types []string
 	}
 
 	for index, arg := range args {
-		oscType := "s"
+		oscType := 's'
 		if len(types) > index {
 			oscType = types[index]
 		}
 		typedArg, err := osc.ArgFromStringAndType(arg, oscType)
 		if err != nil {
-			fmt.Printf("Error converting arg to typed arg: %v", err)
-			return
+
+			return fmt.Errorf("Error converting arg to typed arg: %w", err)
 		}
 		oscMessage.Args = append(oscMessage.Args, typedArg)
 
@@ -124,8 +131,7 @@ func send(host string, port int32, address string, args []string, types []string
 
 	oscMessageBuffer, err := oscMessage.ToBytes()
 	if err != nil {
-		fmt.Printf("Error converting osc message to bytes %v", err)
-		return
+		return fmt.Errorf("Error converting osc message to bytes: %w", err)
 	}
 
 	if slip {
@@ -141,13 +147,12 @@ func send(host string, port int32, address string, args []string, types []string
 	netAddress := net.JoinHostPort(host, fmt.Sprintf("%d", port))
 	conn, err := net.Dial(protocol, netAddress)
 	if err != nil {
-		fmt.Printf("Dial err %v\n", err)
-		return
+		return fmt.Errorf("Dial err: %w", err)
 	}
 	defer conn.Close()
 
 	if _, err = conn.Write([]byte(oscMessageBuffer)); err != nil {
-		fmt.Printf("Write err %v\n", err)
-		return
+		return fmt.Errorf("Write err: %w", err)
 	}
+	return nil
 }

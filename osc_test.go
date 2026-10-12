@@ -29,7 +29,7 @@ func TestGoodPacketFromBytes(t *testing.T) {
 					Seconds:           32,
 					FractionalSeconds: 0,
 				},
-				Contents: []osc.Packet{&osc.Message{Address: "/oscillator/4/frequency", Args: []osc.Arg{{Type: "f", Value: float32(440)}}}},
+				Contents: []osc.Packet{&osc.Message{Address: "/oscillator/4/frequency", Args: []osc.Arg{{Type: 'f', Value: float32(440)}}}},
 			},
 			bytes: []byte{35, 98, 117, 110, 100, 108, 101, 0, 0, 0, 0,
 				32, 0, 0, 0, 0, 0, 0, 0, 32, 47, 111,
