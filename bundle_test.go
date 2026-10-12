@@ -1,9 +1,9 @@
 package osc
 
 import (
-	"reflect"
-	"slices"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestGoodOSCBundleEncoding(t *testing.T) {
@@ -35,13 +35,8 @@ func TestGoodOSCBundleEncoding(t *testing.T) {
 
 			got, err := testCase.bundle.ToBytes()
 
-			if err != nil {
-				t.Fatalf("failed to encode properly: %s", err.Error())
-			}
-
-			if !reflect.DeepEqual(got, testCase.expected) {
-				t.Fatalf("failed to encode properly got '%v', expected '%v'", got, testCase.expected)
-			}
+			require.NoError(t, err)
+			require.Equal(t, testCase.expected, got)
 		})
 	}
 }
@@ -69,15 +64,10 @@ func TestBadOSCBundleEncoding(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 
-			got, err := testCase.bundle.ToBytes()
+			_, err := testCase.bundle.ToBytes()
 
-			if err == nil {
-				t.Fatalf("OSCBundle.ToBytes() expected to fail but got: %+v", got)
-			}
-
-			if err.Error() != testCase.errorString {
-				t.Fatalf("OSCBundle.ToBytes() got error '%s', expected '%s'", err.Error(), testCase.errorString)
-			}
+			require.Error(t, err)
+			require.EqualError(t, err, testCase.errorString)
 		})
 	}
 }
@@ -132,19 +122,11 @@ func TestGoodOSCBundleDecoding(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			actual, remainingBytes, error := BundleFromBytes(testCase.bytes)
+			actual, remainingBytes, err := BundleFromBytes(testCase.bytes)
 
-			if error != nil {
-				t.Fatalf("failed to decode properly: %s", error.Error())
-			}
-
-			if len(remainingBytes) > 0 {
-				t.Fatalf("should not have any remaining bytes")
-			}
-
-			if !reflect.DeepEqual(actual, testCase.expected) {
-				t.Fatalf("failed to decode properly got '%v', expected '%v'", actual, testCase.expected)
-			}
+			require.NoError(t, err)
+			require.Empty(t, remainingBytes)
+			require.Equal(t, testCase.expected, actual)
 		})
 	}
 }
@@ -217,15 +199,10 @@ func TestBadOSCBundleDecoding(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			got, _, err := BundleFromBytes(testCase.bytes)
+			_, _, err := BundleFromBytes(testCase.bytes)
 
-			if err == nil {
-				t.Fatalf("BundleFromBytes expected to fail but got: %+v", got)
-			}
-
-			if err.Error() != testCase.errorString {
-				t.Fatalf("BundleFromBytes got error '%s', expected '%s'", err.Error(), testCase.errorString)
-			}
+			require.Error(t, err)
+			require.EqualError(t, err, testCase.errorString)
 		})
 	}
 }
@@ -244,17 +221,11 @@ func TestOSCBundleMarshalBinary(t *testing.T) {
 	}
 
 	got, err := message.MarshalBinary()
-	if err != nil {
-		t.Fatalf("Bundle.MarshalBinary failed: %s", err.Error())
-	}
+	require.NoError(t, err)
 
 	expected, err := message.ToBytes()
-	if err != nil {
-		t.Fatalf("Bundle.ToBytes failed: %s", err.Error())
-	}
-	if !slices.Equal(got, expected) {
-		t.Fatalf("Bundle.MarshalBinary output does not match Bundle.ToBytes output")
-	}
+	require.NoError(t, err)
+	require.Equal(t, expected, got)
 }
 
 func TestGoodOSCBundleUnmarshalBinary(t *testing.T) {
@@ -267,18 +238,12 @@ func TestGoodOSCBundleUnmarshalBinary(t *testing.T) {
 		44, 102, 0, 0, 67, 220, 0, 0}
 
 	err := message.UnmarshalBinary(bytes)
-	if err != nil {
-		t.Fatalf("Bundle.UnmarshalBinary failed: %s", err.Error())
-	}
+	require.NoError(t, err)
 
 	expected, _, err := BundleFromBytes(bytes)
-	if err != nil {
-		t.Fatalf("BundleFromBytes failed: %s", err.Error())
-	}
+	require.NoError(t, err)
 
-	if !reflect.DeepEqual(message, expected) {
-		t.Fatalf("Bundle.UnmarshalBinary result does not match BundleFromBytes result.\nGot: %+v\nExpected: %+v", message, expected)
-	}
+	require.Equal(t, expected, message)
 }
 
 func TestBadOSCBundleUnmarshalBinary(t *testing.T) {
@@ -286,16 +251,12 @@ func TestBadOSCBundleUnmarshalBinary(t *testing.T) {
 
 	bytes := []byte{}
 
-	got := message.UnmarshalBinary(bytes)
-	if got == nil {
-		t.Fatalf("Bundle.UnmarshalBinary expected to fail but got no error")
-	}
+	gotErr := message.UnmarshalBinary(bytes)
+	require.Error(t, gotErr)
 
-	_, _, expected := BundleFromBytes(bytes)
+	_, _, expectedErr := BundleFromBytes(bytes)
 
-	if got.Error() != expected.Error() {
-		t.Fatalf("Bundle.UnmarshalBinary got error '%s', expected '%s'", got.Error(), expected.Error())
-	}
+	require.EqualError(t, gotErr, expectedErr.Error())
 }
 
 func FuzzBundleFromBytes(f *testing.F) {

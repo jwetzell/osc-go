@@ -3,127 +3,84 @@ package osc
 import (
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestStringArg(t *testing.T) {
 	expected := "test"
 	arg := StringArg(expected)
-	if arg.Type != "s" {
-		t.Errorf("Expected type 's', got '%s'", arg.Type)
-	}
-	if arg.Value != expected {
-		t.Errorf("Expected value '%s', got '%v'", expected, arg.Value)
-	}
+	require.Equal(t, "s", arg.Type)
+	require.Equal(t, expected, arg.Value)
 }
 
 func TestInt32Arg(t *testing.T) {
 	expected := int32(10)
 	arg := Int32Arg(expected)
-	if arg.Type != "i" {
-		t.Errorf("Expected type 'i', got '%s'", arg.Type)
-	}
-	if arg.Value != expected {
-		t.Errorf("Expected value '%d', got '%v'", expected, arg.Value)
-	}
+	require.Equal(t, "i", arg.Type)
+	require.Equal(t, expected, arg.Value)
 }
 
 func TestFloatArg(t *testing.T) {
 	expected := float32(3.14)
 	arg := FloatArg(expected)
-	if arg.Type != "f" {
-		t.Errorf("Expected type 'f', got '%s'", arg.Type)
-	}
-	if arg.Value != expected {
-		t.Errorf("Expected value '%f', got '%v'", expected, arg.Value)
-	}
+	require.Equal(t, "f", arg.Type)
+	require.Equal(t, expected, arg.Value)
 }
 
 func TestBlobArg(t *testing.T) {
 	expected := []byte{0x01, 0x02, 0x03}
 	arg := BlobArg(expected)
-	if arg.Type != "b" {
-		t.Errorf("Expected type 'b', got '%s'", arg.Type)
-	}
-
-	if !reflect.DeepEqual(arg.Value, expected) {
-		t.Errorf("Expected value '%v', got '%v'", expected, arg.Value)
-	}
+	require.Equal(t, "b", arg.Type)
+	require.True(t, reflect.DeepEqual(arg.Value, expected))
 }
 
 func TestTrueArg(t *testing.T) {
 	arg := TrueArg()
-	if arg.Type != "T" {
-		t.Errorf("Expected type 'T', got '%s'", arg.Type)
-	}
-	if arg.Value != true {
-		t.Errorf("Expected value '%v', got '%v'", true, arg.Value)
-	}
+	require.Equal(t, "T", arg.Type)
+	require.Equal(t, true, arg.Value)
 }
 
 func TestFalseArg(t *testing.T) {
 	arg := FalseArg()
-	if arg.Type != "F" {
-		t.Errorf("Expected type 'F', got '%s'", arg.Type)
-	}
-	if arg.Value != false {
-		t.Errorf("Expected value '%v', got '%v'", false, arg.Value)
-	}
+	require.Equal(t, "F", arg.Type)
+	require.Equal(t, false, arg.Value)
 }
 
 func TestNilArg(t *testing.T) {
 	arg := NilArg()
-	if arg.Type != "N" {
-		t.Errorf("Expected type 'N', got '%s'", arg.Type)
-	}
-	if arg.Value != nil {
-		t.Errorf("Expected value '%v', got '%v'", nil, arg.Value)
-	}
+	require.Equal(t, "N", arg.Type)
+	require.Equal(t, nil, arg.Value)
 }
 
 func TestColorArg(t *testing.T) {
 	expected := Color{R: 255, G: 123, B: 222, A: 111}
 	arg := ColorArg(expected.R, expected.G, expected.B, expected.A)
 
-	if arg.Type != "r" {
-		t.Errorf("Expected type 'r', got '%s'", arg.Type)
-	}
-	if !reflect.DeepEqual(arg.Value, expected) {
-		t.Errorf("Expected value '%v', got '%v'", expected, arg.Value)
-	}
+	require.Equal(t, "r", arg.Type)
+	require.Equal(t, expected, arg.Value)
 }
 
 func TestInt64Arg(t *testing.T) {
 	expected := int64(100)
 	arg := Int64Arg(expected)
-	if arg.Type != "h" {
-		t.Errorf("Expected type 'h', got '%s'", arg.Type)
-	}
-	if arg.Value != expected {
-		t.Errorf("Expected value '%d', got '%v'", expected, arg.Value)
-	}
+	require.Equal(t, "h", arg.Type)
+	require.Equal(t, expected, arg.Value)
 }
 
 func TestDoubleArg(t *testing.T) {
 	expected := float64(3.14159)
 	arg := DoubleArg(expected)
-	if arg.Type != "d" {
-		t.Errorf("Expected type 'd', got '%s'", arg.Type)
-	}
-	if arg.Value != expected {
-		t.Errorf("Expected value '%f', got '%v'", expected, arg.Value)
-	}
+	require.Equal(t, "d", arg.Type)
+	require.Equal(t, expected, arg.Value)
 }
 
 func TestTimeTagArg(t *testing.T) {
 	expected := TimeTag{Seconds: 12345, FractionalSeconds: 67890}
 	arg := TimeTagArg(expected.Seconds, expected.FractionalSeconds)
 
-	if arg.Type != "t" {
-		t.Errorf("Expected type 't', got '%s'", arg.Type)
-	}
-	if !reflect.DeepEqual(arg.Value, expected) {
-		t.Errorf("Expected value '%v', got '%v'", expected, arg.Value)
-	}
+	require.Equal(t, "t", arg.Type)
+	require.Equal(t, expected, arg.Value)
 }
 
 func TestGoodArgFromStringAndType(t *testing.T) {
@@ -220,13 +177,8 @@ func TestGoodArgFromStringAndType(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			got, err := ArgFromStringAndType(testCase.rawArg, testCase.oscType)
 
-			if err != nil {
-				t.Fatalf("failed to encode properly: %s", err.Error())
-			}
-
-			if !reflect.DeepEqual(got, testCase.expected) {
-				t.Fatalf("failed to encode properly got '%v', expected '%v'", got, testCase.expected)
-			}
+			require.NoError(t, err)
+			require.Equal(t, testCase.expected, got)
 		})
 	}
 }
@@ -278,15 +230,10 @@ func TestBadArgFromStringAndType(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			got, err := ArgFromStringAndType(testCase.rawArg, testCase.oscType)
+			_, err := ArgFromStringAndType(testCase.rawArg, testCase.oscType)
 
-			if err == nil {
-				t.Fatalf("expected error but got: %+v", got)
-			}
-
-			if err.Error() != testCase.errorMsg {
-				t.Fatalf("expected error '%v', got '%v'", testCase.errorMsg, err.Error())
-			}
+			require.Error(t, err)
+			require.EqualError(t, err, testCase.errorMsg)
 		})
 	}
 }
