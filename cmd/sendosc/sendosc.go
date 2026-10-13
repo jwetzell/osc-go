@@ -71,7 +71,7 @@ func main() {
 					if len(t) > 1 {
 						return fmt.Errorf("OSC type should be a single character, got: %s", t)
 					}
-					types = append(types, []rune(t)[0])
+					types = append(types, rune(t[0]))
 				}
 			}
 			protocol := cmd.String("protocol")
