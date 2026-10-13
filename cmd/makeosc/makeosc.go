@@ -44,12 +44,11 @@ func main() {
 					if len(t) > 1 {
 						return fmt.Errorf("OSC type should be a single character, got: %s", t)
 					}
-					types = append(types, []rune(t)[0])
+					types = append(types, rune(t[0]))
 				}
 			}
 			slip := cmd.Bool("slip")
-			makeMsg(address, args, types, slip)
-			return nil
+			return makeMsg(address, args, types, slip)
 		},
 	}
 
@@ -82,7 +81,7 @@ func slipEncode(bytes []byte) []byte {
 	return encodedBytes
 }
 
-func makeMsg(address string, args []string, types []rune, slip bool) {
+func makeMsg(address string, args []string, types []rune, slip bool) error {
 
 	oscMessage := osc.Message{
 		Address: address,
@@ -97,20 +96,22 @@ func makeMsg(address string, args []string, types []rune, slip bool) {
 
 		typedArg, err := osc.ArgFromStringAndType(arg, oscType)
 		if err != nil {
-			fmt.Printf("Error converting arg to typed arg: %v\n", err)
-			return
+			return fmt.Errorf("Error converting arg to typed arg: %w", err)
 		}
 		oscMessage.Args = append(oscMessage.Args, typedArg)
 	}
 
 	oscMessageBuffer, err := oscMessage.ToBytes()
 	if err != nil {
-		fmt.Printf("Error converting OSC message to bytes: %v\n", err)
-		return
+		return fmt.Errorf("Error converting OSC message to bytes: %w", err)
 	}
 
 	if slip {
 		oscMessageBuffer = slipEncode(oscMessageBuffer)
 	}
-	os.Stdout.Write(oscMessageBuffer)
+	_, err = os.Stdout.Write(oscMessageBuffer)
+	if err != nil {
+		return fmt.Errorf("Error writing OSC message to stdout: %w", err)
+	}
+	return nil
 }
