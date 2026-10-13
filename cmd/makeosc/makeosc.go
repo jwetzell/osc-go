@@ -40,12 +40,10 @@ func main() {
 			args := cmd.StringSlice("arg")
 			types := []rune{}
 			for _, t := range cmd.StringSlice("type") {
-				if len(t) > 0 {
-					if len(t) > 1 {
-						return fmt.Errorf("OSC type should be a single character, got: %s", t)
-					}
-					types = append(types, rune(t[0]))
+				if len(t) != 1 {
+					return fmt.Errorf("OSC type should be a single character, got: %s", t)
 				}
+				types = append(types, rune(t[0]))
 			}
 			slip := cmd.Bool("slip")
 			return makeMsg(address, args, types, slip)
