@@ -1,85 +1,90 @@
 package main
 
 import (
-	"context"
 	"encoding/binary"
+	"flag"
 	"fmt"
+	"log/slog"
 	"net"
-	"os"
+	"strings"
 
 	"github.com/jwetzell/osc-go"
-
-	"github.com/urfave/cli/v3"
 )
+
+type stringSliceFlag []string
+
+func (i *stringSliceFlag) String() string {
+	return strings.Join(*i, ", ")
+}
+
+func (i *stringSliceFlag) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
+var hostFlag string
+var portFlag int
+var protocolFlag string
+var addressFlag string
+var slipFlag bool
+var argsFlag stringSliceFlag
+var typesFlag stringSliceFlag
+
+func init() {
+	flag.StringVar(&hostFlag, "host", "", "host to send OSC message to")
+	flag.IntVar(&portFlag, "port", 0, "port to send OSC message to")
+	flag.StringVar(&protocolFlag, "protocol", "udp", "protocol to use to send (tcp or udp)")
+	flag.StringVar(&addressFlag, "address", "", "OSC address")
+	flag.BoolVar(&slipFlag, "slip", false, "whether to slip encode the OSC Message bytes")
+	flag.Var(&argsFlag, "arg", "OSC args")
+	flag.Var(&typesFlag, "type", "OSC types")
+}
 
 func main() {
 
-	cmd := &cli.Command{
-		Name:  "sendosc",
-		Usage: "send OSC messages via UDP or TCP",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:     "host",
-				Usage:    "host to send OSC message to",
-				Required: true,
-			},
-			&cli.Int32Flag{
-				Name:     "port",
-				Usage:    "port to send OSC message to",
-				Required: true,
-			},
-			&cli.StringFlag{
-				Name:  "protocol",
-				Usage: "protocol to use to send (tcp or udp)",
-				Value: "udp",
-				Validator: func(flag string) error {
-					if flag != "udp" && flag != "tcp" {
-						return fmt.Errorf("protocol must be either 'udp' or 'tcp'")
-					}
-					return nil
-				},
-			},
-			&cli.StringFlag{
-				Name:     "address",
-				Usage:    "OSC address",
-				Required: true,
-			},
-			&cli.StringSliceFlag{
-				Name:  "arg",
-				Usage: "OSC args",
-				Value: []string{},
-			},
-			&cli.StringSliceFlag{
-				Name:  "type",
-				Usage: "OSC types",
-				Value: []string{},
-			},
-			&cli.BoolFlag{
-				Name:  "slip",
-				Value: false,
-				Usage: "whether to slip encode the OSC Message bytes",
-			},
-		},
-		Action: func(ctx context.Context, cmd *cli.Command) error {
-			host := cmd.String("host")
-			port := cmd.Int32("port")
-			address := cmd.String("address")
-			args := cmd.StringSlice("arg")
-			types := []rune{}
-			for _, t := range cmd.StringSlice("type") {
-				if len(t) != 1 {
-					return fmt.Errorf("OSC type should be a single character, got: %s", t)
-				}
-				types = append(types, rune(t[0]))
-			}
-			protocol := cmd.String("protocol")
-			slip := cmd.Bool("slip")
-			return send(host, port, address, args, types, protocol, slip)
-		},
+	flag.Parse()
+
+	if hostFlag == "" {
+		slog.Error("host is required")
+		flag.PrintDefaults()
+		return
 	}
 
-	if err := cmd.Run(context.Background(), os.Args); err != nil {
-		fmt.Printf("Error running command: %v\n", err)
+	if portFlag == 0 {
+		slog.Error("port is required")
+		flag.PrintDefaults()
+		return
+	}
+
+	if addressFlag == "" {
+		slog.Error("address is required")
+		flag.PrintDefaults()
+		return
+	}
+
+	switch protocolFlag {
+	case "":
+		protocolFlag = "udp"
+	case "udp", "tcp":
+		// do nothing
+	default:
+		slog.Error("invalid protocol", "protocol", protocolFlag)
+		return
+	}
+
+	types := []rune{}
+	for _, t := range typesFlag {
+		if len(t) != 1 {
+			slog.Error("invalid OSC type", "type", t)
+			return
+		}
+		types = append(types, rune(t[0]))
+	}
+
+	err := send(hostFlag, portFlag, addressFlag, argsFlag, types, protocolFlag, slipFlag)
+	if err != nil {
+		slog.Error("error sending OSC message", "err", err)
+		return
 	}
 }
 
@@ -106,7 +111,7 @@ func slipEncode(bytes []byte) []byte {
 	return encodedBytes
 }
 
-func send(host string, port int32, address string, args []string, types []rune, protocol string, slip bool) error {
+func send(host string, port int, address string, args []string, types []rune, protocol string, slip bool) error {
 
 	oscMessage := osc.Message{
 		Address: address,

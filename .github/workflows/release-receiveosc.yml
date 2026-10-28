@@ -44,6 +44,7 @@ jobs:
           goarch: ${{ matrix.goarch }}
           goversion: "1.25.1"
           project_path: "./cmd/receiveosc"
+          ldflags: "-s -w"
           binary_name: "receiveosc"
           asset_name: receiveosc-${{ matrix.goos }}-${{ matrix.goarch }}
           release_name: ${{github.ref_name}}

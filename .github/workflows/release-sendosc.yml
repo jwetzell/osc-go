@@ -44,6 +44,7 @@ jobs:
           goarch: ${{ matrix.goarch }}
           goversion: "1.25.1"
           project_path: "./cmd/sendosc"
+          ldflags: "-s -w"
           binary_name: "sendosc"
           asset_name: sendosc-${{ matrix.goos }}-${{ matrix.goarch }}
           release_name: ${{github.ref_name}}

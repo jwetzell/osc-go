@@ -1,57 +1,59 @@
 package main
 
 import (
-	"context"
+	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/jwetzell/osc-go"
-	"github.com/urfave/cli/v3"
 )
+
+type stringSliceFlag []string
+
+func (i *stringSliceFlag) String() string {
+	return strings.Join(*i, ", ")
+}
+
+func (i *stringSliceFlag) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
+var addressFlag string
+var slipFlag bool
+var argsFlag stringSliceFlag
+var typesFlag stringSliceFlag
+
+func init() {
+	flag.StringVar(&addressFlag, "address", "", "OSC address")
+	flag.BoolVar(&slipFlag, "slip", false, "whether to slip encode the OSC Message bytes")
+	flag.Var(&argsFlag, "arg", "OSC args")
+	flag.Var(&typesFlag, "type", "OSC types")
+}
 
 func main() {
 
-	cmd := &cli.Command{
-		Name:  "makeosc",
-		Usage: "make osc bytes",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:     "address",
-				Value:    "",
-				Usage:    "OSC address",
-				Required: true,
-			},
-			&cli.StringSliceFlag{
-				Name:  "arg",
-				Usage: "OSC args",
-			},
-			&cli.StringSliceFlag{
-				Name:  "type",
-				Usage: "OSC types",
-			},
-			&cli.BoolFlag{
-				Name:  "slip",
-				Value: false,
-				Usage: "whether to slip encode the OSC Message bytes",
-			},
-		},
-		Action: func(ctx context.Context, cmd *cli.Command) error {
-			address := cmd.String("address")
-			args := cmd.StringSlice("arg")
-			types := []rune{}
-			for _, t := range cmd.StringSlice("type") {
-				if len(t) != 1 {
-					return fmt.Errorf("OSC type should be a single character, got: %s", t)
-				}
-				types = append(types, rune(t[0]))
-			}
-			slip := cmd.Bool("slip")
-			return makeMsg(address, args, types, slip)
-		},
+	flag.Parse()
+
+	if addressFlag == "" {
+		fmt.Println("Address is required")
+		flag.PrintDefaults()
+		return
 	}
 
-	if err := cmd.Run(context.Background(), os.Args); err != nil {
-		fmt.Printf("Error running command: %v\n", err)
+	types := []rune{}
+	for _, t := range typesFlag {
+		if len(t) != 1 {
+			fmt.Println("OSC type should be a single character, got: ", t)
+			return
+		}
+		types = append(types, rune(t[0]))
+	}
+
+	err := makeMsg(addressFlag, argsFlag, types, slipFlag)
+	if err != nil {
+		fmt.Printf("Error making OSC message: %v\n", err)
 		return
 	}
 }
