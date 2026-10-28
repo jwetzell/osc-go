@@ -25,6 +25,7 @@ func init() {
 }
 
 func main() {
+	flag.Parse()
 
 	ip := ipFlag
 	port := portFlag

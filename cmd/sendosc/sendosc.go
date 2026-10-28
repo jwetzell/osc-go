@@ -41,24 +41,20 @@ func init() {
 }
 
 func main() {
-
 	flag.Parse()
 
 	if hostFlag == "" {
 		slog.Error("host is required")
-		flag.PrintDefaults()
 		return
 	}
 
 	if portFlag == 0 {
 		slog.Error("port is required")
-		flag.PrintDefaults()
 		return
 	}
 
 	if addressFlag == "" {
 		slog.Error("address is required")
-		flag.PrintDefaults()
 		return
 	}
 
