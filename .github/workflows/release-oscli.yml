@@ -1,9 +1,9 @@
-name: "release go binaries for sendosc"
+name: "release go binaries for oscli"
 
 on:
   push:
     tags:
-      - 'sendosc/*'
+      - 'oscli/*'
 
 permissions:
   contents: write
@@ -12,7 +12,7 @@ permissions:
 jobs:
 
   create-release:
-    name: Create sendosc release
+    name: Create oscli release
     runs-on: ubuntu-latest 
     steps:
       - name: Create Release
@@ -37,14 +37,16 @@ jobs:
             goos: darwin
     steps:
       - uses: actions/checkout@v7
+      - name: set version
+        run: echo "VERSION=${GITHUB_REF_NAME#oscli/}" >> $GITHUB_ENV
       - uses: wangyoucao577/go-release-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
           goversion: "./go.mod"
-          project_path: "./cmd/sendosc"
-          ldflags: "-s -w"
-          binary_name: "sendosc"
-          asset_name: sendosc-${{ matrix.goos }}-${{ matrix.goarch }}
-          release_name: ${{github.ref_name}}
+          project_path: "./cmd/oscli"
+          ldflags: "-s -w -X main.version=${{ env.VERSION }}"
+          binary_name: "oscli"
+          asset_name: oscli-${{ matrix.goos }}-${{ matrix.goarch }}
+          release_name: ${{ env.VERSION }}
