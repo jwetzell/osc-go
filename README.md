@@ -22,18 +22,6 @@ Usage of sendosc:
   -type value
         OSC types
 ```
-### makeosc
-```
-Usage of makeosc:
-  -address string
-        OSC address
-  -arg value
-        OSC args
-  -slip
-        whether to slip encode the OSC Message bytes
-  -type value
-        OSC types
-```
 ### receiveosc
 ```
 Usage of receiveosc:
