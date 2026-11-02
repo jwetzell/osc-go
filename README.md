@@ -5,6 +5,7 @@ A mostly complete OSC implementation and collection of command line OSC utilitie
 ## Utilities
 
 ### sendosc
+Send OSC message including args over UDP or TCP
 ```
 Usage of sendosc:
   -address string
@@ -23,6 +24,7 @@ Usage of sendosc:
         OSC types
 ```
 ### receiveosc
+Receive OSC messages over UDP or TCP and log them out.
 ```
 Usage of receiveosc:
   -format string
