@@ -49,4 +49,4 @@ jobs:
           ldflags: "-s -w -X main.version=${{ env.VERSION }}"
           binary_name: "oscli"
           asset_name: oscli-${{ matrix.goos }}-${{ matrix.goarch }}
-          release_name: ${{ env.VERSION }}
+          release_name: ${{ github.ref_name }}
