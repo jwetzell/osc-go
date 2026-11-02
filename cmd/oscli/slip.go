@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log/slog"
 
 	"github.com/jwetzell/osc-go"
 )
@@ -62,7 +62,7 @@ func (s *SLIP) Decode(bytes []byte) {
 			} else {
 				oscPacket, _, err := osc.PacketFromBytes(s.pendingBytes)
 				if err != nil {
-					fmt.Printf("Error decoding SLIP packet: %v\n", err)
+					slog.Default().Error("Error decoding SLIP packet", "err", err)
 					return
 				} else {
 					s.Packets <- oscPacket

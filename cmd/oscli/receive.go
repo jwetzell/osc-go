@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net"
+	"os"
 
 	"github.com/jwetzell/osc-go"
 )
@@ -39,16 +41,16 @@ func handlePacket(message osc.Packet, format string) {
 	} else if msg, ok := message.(*osc.Message); ok {
 		handleMessage(msg, format)
 	} else {
-		fmt.Println("Received unknown OSC Packet type")
+		slog.Default().Error("Received unknown OSC Packet type")
 	}
 }
 
 func handleMessage(message *osc.Message, format string) {
 	if format == "json" {
 		jsonData, _ := json.Marshal(message)
-		fmt.Println(string(jsonData))
+		os.Stdout.WriteString(string(jsonData))
 	} else {
-		fmt.Printf("%v\n", message)
+		os.Stdout.WriteString(fmt.Sprintf("%v\n", message))
 	}
 }
 
@@ -62,13 +64,13 @@ func listenUDP(netAddress string, format string) {
 
 	laddr, err := net.ResolveUDPAddr("udp4", netAddress)
 	if err != nil {
-		fmt.Println(err)
+		slog.Default().Error("Error resolving UDP address", "err", err)
 		return
 	}
 
 	conn, err := net.ListenUDP("udp4", laddr)
 	if err != nil {
-		fmt.Println(err)
+		slog.Default().Error("Error listening on UDP", "err", err)
 		return
 	}
 
@@ -79,14 +81,14 @@ func listenUDP(netAddress string, format string) {
 		bytesRead, _, err := conn.ReadFromUDP(buffer)
 
 		if err != nil {
-			fmt.Printf("Error reading from UDP: %v\n", err)
+			slog.Default().Error("Error reading from UDP", "err", err)
 			return
 		}
 
 		oscPacket, _, err := osc.PacketFromBytes(buffer[0:bytesRead])
 
 		if err != nil {
-			fmt.Printf("Error parsing OSC packet: %v\n", err)
+			slog.Default().Error("Error parsing OSC packet", "err", err)
 			return
 		}
 		handlePacket(oscPacket, format)
@@ -96,7 +98,7 @@ func listenUDP(netAddress string, format string) {
 func listenTCP(netAddress string, useSLIP bool, format string) {
 	socket, err := net.Listen("tcp4", netAddress)
 	if err != nil {
-		fmt.Println(err)
+		slog.Default().Error("Error listening on TCP", "err", err)
 		return
 	}
 
@@ -105,7 +107,7 @@ func listenTCP(netAddress string, useSLIP bool, format string) {
 	for {
 		conn, err := socket.Accept()
 		if err != nil {
-			fmt.Println(err)
+			slog.Default().Error("Error accepting TCP connection", "err", err)
 			continue
 		}
 		go handleTCPConnection(conn, useSLIP, format)

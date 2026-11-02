@@ -12,6 +12,8 @@ import (
 var version = "local"
 
 func main() {
+
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{})))
 	cmd := &cli.Command{
 		Name:    "oscli",
 		Usage:   "basic OSC utilities",
