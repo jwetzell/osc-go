@@ -11,11 +11,11 @@ import (
 )
 
 func handleTCPConnection(conn net.Conn, useSLIP bool, format string) {
-	slip := SLIP{
+	slip := &SLIP{
 		pendingBytes: []byte{},
-		Packets:      make(chan osc.Packet),
+		Messages:     make(chan []byte),
 	}
-	go handleSLIP(slip, format)
+	go handleOSCSLIP(slip, format)
 
 	defer conn.Close()
 	buffer := make([]byte, 1024)
@@ -40,8 +40,6 @@ func handlePacket(message osc.Packet, format string) {
 		handleBundle(bundle, format)
 	} else if msg, ok := message.(*osc.Message); ok {
 		handleMessage(msg, format)
-	} else {
-		slog.Default().Error("Received unknown OSC Packet type")
 	}
 }
 
