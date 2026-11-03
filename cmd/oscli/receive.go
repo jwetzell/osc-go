@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -8,7 +9,74 @@ import (
 	"os"
 
 	"github.com/jwetzell/osc-go"
+	"github.com/urfave/cli/v3"
 )
+
+func newReceiveCommand() *cli.Command {
+	return &cli.Command{
+		Name:    "receive",
+		Aliases: []string{"r"},
+		Usage:   "receive OSC messages via UDP or TCP",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:  "ip",
+				Usage: "ip to receive OSC messages on",
+				Value: "0.0.0.0",
+			},
+			&cli.Int32Flag{
+				Name:  "port",
+				Usage: "port to receive OSC messages on",
+				Value: 8888,
+			},
+			&cli.StringFlag{
+				Name:  "protocol",
+				Usage: "protocol to use to receive (tcp or udp)",
+				Value: "udp",
+				Validator: func(flag string) error {
+					if flag != "udp" && flag != "tcp" {
+						return fmt.Errorf("protocol must be either 'udp' or 'tcp'")
+					}
+					return nil
+				},
+			},
+			&cli.StringFlag{
+				Name:  "format",
+				Usage: "format for messages to be output in ('json')",
+				Value: "json",
+				Validator: func(flag string) error {
+					if flag != "json" {
+						return fmt.Errorf("format must be 'json'")
+					}
+					return nil
+				},
+			},
+			&cli.BoolFlag{
+				Name:  "slip",
+				Value: false,
+				Usage: "whether to slip encode the OSC Message bytes",
+			},
+		},
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			ip := cmd.String("ip")
+			port := cmd.Int32("port")
+			protocol := cmd.String("protocol")
+			format := cmd.String("format")
+			slip := cmd.Bool("slip")
+
+			netAddress := fmt.Sprintf("%s:%d", ip, port)
+			switch protocol {
+			case "udp":
+				listenUDP(netAddress, format)
+			case "tcp":
+				if !slip {
+					return fmt.Errorf("OSC 1.0 over TCP is not supported yet")
+				}
+				listenTCP(netAddress, slip, format)
+			}
+			return nil
+		},
+	}
+}
 
 func handleTCPConnection(conn net.Conn, useSLIP bool, format string) {
 	slip := &SLIP{
