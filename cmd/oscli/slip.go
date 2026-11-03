@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log/slog"
+	"fmt"
 
 	"github.com/jwetzell/osc-go"
 )
@@ -15,7 +15,7 @@ var (
 
 type SLIP struct {
 	pendingBytes []byte
-	Packets      chan osc.Packet
+	Messages     chan []byte
 }
 
 func (s *SLIP) Encode(bytes []byte) []byte {
@@ -38,7 +38,6 @@ func (s *SLIP) Encode(bytes []byte) []byte {
 }
 
 func (s *SLIP) Decode(bytes []byte) {
-
 	escapeNext := false
 	for _, packetByte := range bytes {
 
@@ -60,13 +59,7 @@ func (s *SLIP) Decode(bytes []byte) {
 				// probably opening END byte, can discard
 				continue
 			} else {
-				oscPacket, _, err := osc.PacketFromBytes(s.pendingBytes)
-				if err != nil {
-					slog.Default().Error("Error decoding SLIP packet", "err", err)
-					return
-				} else {
-					s.Packets <- oscPacket
-				}
+				s.Messages <- s.pendingBytes
 			}
 			s.pendingBytes = []byte{}
 		} else {
@@ -75,8 +68,13 @@ func (s *SLIP) Decode(bytes []byte) {
 	}
 }
 
-func handleSLIP(slip SLIP, format string) {
-	for message := range slip.Packets {
-		handlePacket(message, format)
+func handleOSCSLIP(slip *SLIP, format string) {
+	for message := range slip.Messages {
+		oscPacket, _, err := osc.PacketFromBytes(message)
+		if err != nil {
+			fmt.Printf("Error decoding SLIP packet: %v\n", err)
+			return
+		}
+		handlePacket(oscPacket, format)
 	}
 }

@@ -184,6 +184,36 @@ func main() {
 					return encodeMsg(address, args, types, slip)
 				},
 			},
+			{
+				Name:    "decode",
+				Aliases: []string{"r"},
+				Usage:   "receive OSC messages via Stdin",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "format",
+						Usage: "format for messages to be output in ('json')",
+						Value: "json",
+						Validator: func(flag string) error {
+							if flag != "json" {
+								return fmt.Errorf("format must be 'json'")
+							}
+							return nil
+						},
+					},
+					&cli.BoolFlag{
+						Name:  "slip",
+						Value: false,
+						Usage: "whether to slip encode the OSC Message bytes",
+					},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					format := cmd.String("format")
+					slip := cmd.Bool("slip")
+
+					listenStdin(slip, format)
+					return nil
+				},
+			},
 		},
 	}
 
