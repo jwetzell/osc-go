@@ -146,6 +146,44 @@ func main() {
 					return nil
 				},
 			},
+			{
+				Name:  "encode",
+				Usage: "write encoded OSC message to stdout",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "address",
+						Value:    "",
+						Usage:    "OSC address",
+						Required: true,
+					},
+					&cli.StringSliceFlag{
+						Name:  "arg",
+						Usage: "OSC args",
+					},
+					&cli.StringSliceFlag{
+						Name:  "type",
+						Usage: "OSC types",
+					},
+					&cli.BoolFlag{
+						Name:  "slip",
+						Value: false,
+						Usage: "whether to slip encode the OSC message bytes",
+					},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					address := cmd.String("address")
+					args := cmd.StringSlice("arg")
+					types := []rune{}
+					for _, t := range cmd.StringSlice("type") {
+						if len(t) != 1 {
+							return fmt.Errorf("OSC type should be a single character, got: %s", t)
+						}
+						types = append(types, rune(t[0]))
+					}
+					slip := cmd.Bool("slip")
+					return encodeMsg(address, args, types, slip)
+				},
+			},
 		},
 	}
 
