@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"fmt"
 	"net"
 
 	"github.com/jwetzell/osc-go"
+	slip "github.com/jwetzell/slip-go"
 	"github.com/urfave/cli/v3"
 )
 
@@ -77,7 +79,7 @@ func newSendCommand() *cli.Command {
 	}
 }
 
-func send(host string, port int32, address string, args []string, types []rune, protocol string, slip bool) error {
+func send(host string, port int32, address string, args []string, types []rune, protocol string, useSLIP bool) error {
 
 	oscMessage := osc.Message{
 		Address: address,
@@ -103,16 +105,27 @@ func send(host string, port int32, address string, args []string, types []rune, 
 		return fmt.Errorf("Error converting osc message to bytes: %w", err)
 	}
 
-	if slip {
-		s := SLIP{}
+	outBuffer := bytes.NewBuffer(nil)
 
-		oscMessageBuffer = s.Encode(oscMessageBuffer)
-	} else if protocol == "tcp" {
-		// OSC 1.0 prepends a 4 byte size header for non-SLIP TCP messages
-		size := uint32(len(oscMessageBuffer))
-		sizeBytes := make([]byte, 4)
-		binary.BigEndian.PutUint32(sizeBytes, size)
-		oscMessageBuffer = append(sizeBytes, oscMessageBuffer...)
+	if useSLIP {
+		s := slip.NewWriter(outBuffer)
+
+		_, err := s.Write(oscMessageBuffer)
+		if err != nil {
+			return fmt.Errorf("Error writing SLIP encoded OSC message: %w", err)
+		}
+	} else {
+		if protocol == "tcp" {
+			// OSC 1.0 prepends a 4 byte size header for non-SLIP TCP messages
+			size := uint32(len(oscMessageBuffer))
+			sizeBytes := make([]byte, 4)
+			binary.BigEndian.PutUint32(sizeBytes, size)
+			oscMessageBuffer = append(sizeBytes, oscMessageBuffer...)
+		}
+		_, err := outBuffer.Write(oscMessageBuffer)
+		if err != nil {
+			return fmt.Errorf("Error writing OSC message to buffer: %w", err)
+		}
 	}
 
 	netAddress := net.JoinHostPort(host, fmt.Sprintf("%d", port))
@@ -122,7 +135,7 @@ func send(host string, port int32, address string, args []string, types []rune, 
 	}
 	defer conn.Close()
 
-	if _, err = conn.Write([]byte(oscMessageBuffer)); err != nil {
+	if _, err = conn.Write(outBuffer.Bytes()); err != nil {
 		return fmt.Errorf("Write err: %w", err)
 	}
 	return nil

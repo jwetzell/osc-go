@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"net"
 	"os"
 
 	"github.com/jwetzell/osc-go"
+	slip "github.com/jwetzell/slip-go"
 	"github.com/urfave/cli/v3"
 )
 
@@ -66,6 +68,9 @@ func newReceiveCommand() *cli.Command {
 			netAddress := fmt.Sprintf("%s:%d", ip, port)
 			switch protocol {
 			case "udp":
+				if slip {
+					return fmt.Errorf("SLIP over UDP is not supported")
+				}
 				listenUDP(netAddress, format)
 			case "tcp":
 				if !slip {
@@ -79,27 +84,32 @@ func newReceiveCommand() *cli.Command {
 }
 
 func handleTCPConnection(conn net.Conn, useSLIP bool, format string) {
-	slip := &SLIP{
-		pendingBytes: []byte{},
-		Messages:     make(chan []byte),
+	var reader io.Reader = conn
+
+	if useSLIP {
+		reader = slip.NewReader(conn)
 	}
-	go handleOSCSLIP(slip, format)
 
 	defer conn.Close()
 	buffer := make([]byte, 1024)
 
 	for {
-		bytesRead, err := conn.Read(buffer)
+		bytesRead, err := reader.Read(buffer)
 
 		if err != nil {
 			return
 		}
-		if useSLIP {
-			slip.Decode(buffer[0:bytesRead])
-		} else {
-			// TODO(jwetzell): handle non-SLIP TCP messages properly
+
+		if bytesRead == 0 {
+			continue
 		}
 
+		oscPacket, _, err := osc.PacketFromBytes(buffer[0:bytesRead])
+		if err != nil {
+			slog.Default().Error("Error parsing OSC packet", "err", err)
+			return
+		}
+		handlePacket(oscPacket, format)
 	}
 }
 

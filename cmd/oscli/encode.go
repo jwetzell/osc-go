@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/jwetzell/osc-go"
+	slip "github.com/jwetzell/slip-go"
 	"github.com/urfave/cli/v3"
 )
 
@@ -50,7 +52,7 @@ func newEncodeCommand() *cli.Command {
 	}
 }
 
-func encodeMsg(address string, args []string, types []rune, slip bool) error {
+func encodeMsg(address string, args []string, types []rune, useSLIP bool) error {
 
 	oscMessage := osc.Message{
 		Address: address,
@@ -75,11 +77,12 @@ func encodeMsg(address string, args []string, types []rune, slip bool) error {
 		return fmt.Errorf("Error converting OSC message to bytes: %w", err)
 	}
 
-	if slip {
-		s := &SLIP{}
-		oscMessageBuffer = s.Encode(oscMessageBuffer)
+	var outWriter io.Writer = os.Stdout
+	if useSLIP {
+		outWriter = slip.NewWriter(os.Stdout)
+
 	}
-	_, err = os.Stdout.Write(oscMessageBuffer)
+	_, err = outWriter.Write(oscMessageBuffer)
 	if err != nil {
 		return fmt.Errorf("Error writing OSC message to stdout: %w", err)
 	}
