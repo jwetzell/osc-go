@@ -1,5 +1,7 @@
 github.com/jwetzell/slip-go v0.1.0 h1:Dx98BngQTeuSzJUsG8OUDfj8mPYz09fwjiRj5j69kpY=
 github.com/jwetzell/slip-go v0.1.0/go.mod h1:Z8Iq/Y1g6aKuV3N8N0ziMHLz4Y5UJZMyrNK7ZUDiZHA=
+github.com/jwetzell/slip-go v0.2.0 h1:Fin3SFWZjlgh5Cpc0O2JKVoLQDLFXPtX7JKoXL8+zNw=
+github.com/jwetzell/slip-go v0.2.0/go.mod h1:Z8Iq/Y1g6aKuV3N8N0ziMHLz4Y5UJZMyrNK7ZUDiZHA=
 github.com/stretchr/testify v1.12.1 h1:EuwCh5fleGS7H32xRwO3wRGT7DxrDhLAT6FF8MpWDWE=
 github.com/stretchr/testify v1.12.1/go.mod h1:MDEgiDPPsNp5cuIrHPPCyornHKgEVbtFUmoNlxoYthg=
 github.com/urfave/cli/v3 v3.14.0 h1:a8414NQlHJs0c/iBsulKLzlES0n/lEAskbL2LKpU4/s=
