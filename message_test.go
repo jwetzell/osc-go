@@ -637,3 +637,23 @@ func FuzzMessageFromBytes(f *testing.F) {
 		_, _ = osc.MessageFromBytes(data)
 	})
 }
+
+func FuzzMessageRoundTrip(f *testing.F) {
+	seedBytes := [][]byte{
+		{},
+		{47, 104, 101, 108, 108, 111, 0, 0},
+		{47, 104, 101, 108, 108, 111, 0, 0, 44, 105, 0, 0, 0, 0, 0, 35},
+	}
+
+	for _, seed := range seedBytes {
+		f.Add(seed)
+	}
+
+	f.Fuzz(func(t *testing.T, data []byte) {
+		message, _ := osc.MessageFromBytes(data)
+		if message != nil {
+			bytes, _ := message.MarshalBinary()
+			require.Equal(t, data, bytes)
+		}
+	})
+}
