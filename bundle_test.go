@@ -354,12 +354,14 @@ func FuzzBundleRoundTrip(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, data []byte) {
 		b, err := osc.BundleFromBytes(data)
-		if err == nil {
-			require.NotNil(t, b)
-			roundTrip, err := b.MarshalBinary()
-			if err == nil {
-				require.Equal(t, data, roundTrip)
-			}
+		if err != nil {
+			t.SkipNow()
 		}
+		require.NotNil(t, b)
+		roundTrip, err := b.MarshalBinary()
+		if err != nil {
+			t.SkipNow()
+		}
+		require.Equal(t, data, roundTrip)
 	})
 }

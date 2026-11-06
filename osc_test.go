@@ -145,12 +145,14 @@ func FuzzPacketRoundTrip(f *testing.F) {
 	f.Fuzz(func(t *testing.T, data []byte) {
 		packet, err := osc.PacketFromBytes(data)
 
-		if err == nil {
-			require.NotNil(t, packet)
-			roundTrip, err := packet.MarshalBinary()
-			if err == nil {
-				require.Equal(t, data, roundTrip)
-			}
+		if err != nil {
+			t.SkipNow()
 		}
+		require.NotNil(t, packet)
+		roundTrip, err := packet.MarshalBinary()
+		if err != nil {
+			t.SkipNow()
+		}
+		require.Equal(t, data, roundTrip)
 	})
 }

@@ -643,13 +643,16 @@ func FuzzMessageRoundTrip(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, data []byte) {
 		message, err := osc.MessageFromBytes(data)
-		if err == nil {
-			require.NotNil(t, message)
-			roundTrip, err := message.MarshalBinary()
-			if err == nil {
-				require.Equal(t, data, roundTrip)
-			}
+
+		if err != nil {
+			t.SkipNow()
 		}
+		require.NotNil(t, message)
+		roundTrip, err := message.MarshalBinary()
+		if err != nil {
+			t.SkipNow()
+		}
+		require.Equal(t, data, roundTrip)
 	})
 }
 
@@ -670,7 +673,7 @@ func FuzzMessageAddress(f *testing.F) {
 		}
 
 		if !strings.HasPrefix(address, "/") {
-			t.Skip()
+			t.SkipNow()
 		}
 		_, err := message.MarshalBinary()
 		require.NoError(t, err)
