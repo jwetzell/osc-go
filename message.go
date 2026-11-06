@@ -105,5 +105,9 @@ func MessageFromBytes(bytes []byte) (*Message, error) {
 		}
 	}
 
+	if len(argBytes) > 0 {
+		return nil, errors.New("extra bytes found after parsing all arguments")
+	}
+
 	return &oscMessage, nil
 }
