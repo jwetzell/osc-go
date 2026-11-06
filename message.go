@@ -90,19 +90,13 @@ func MessageFromBytes(bytes []byte) (*Message, error) {
 		return nil, err
 	}
 
-	for index, oscType := range typeString {
-		if index == 0 {
-			if oscType != ',' {
-				return nil, errors.New("type string is malformed")
-			}
-		} else {
-			oscArg, remainingBytes, err := readOSCArg(argBytes, oscType)
-			if err != nil {
-				return nil, err
-			}
-			argBytes = remainingBytes
-			oscMessage.Args = append(oscMessage.Args, oscArg)
+	for _, oscType := range typeString[1:] {
+		oscArg, remainingBytes, err := readOSCArg(argBytes, oscType)
+		if err != nil {
+			return nil, err
 		}
+		argBytes = remainingBytes
+		oscMessage.Args = append(oscMessage.Args, oscArg)
 	}
 
 	if len(argBytes) > 0 {
