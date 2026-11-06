@@ -2,6 +2,7 @@ package osc_test
 
 import (
 	"math"
+	"strings"
 	"testing"
 
 	"github.com/jwetzell/osc-go"
@@ -641,10 +642,37 @@ func FuzzMessageRoundTrip(f *testing.F) {
 	}
 
 	f.Fuzz(func(t *testing.T, data []byte) {
-		message, _ := osc.MessageFromBytes(data)
-		if message != nil {
-			bytes, _ := message.MarshalBinary()
-			require.Equal(t, data, bytes)
+		message, err := osc.MessageFromBytes(data)
+		if err == nil {
+			require.NotNil(t, message)
+			roundTrip, err := message.MarshalBinary()
+			if err == nil {
+				require.Equal(t, data, roundTrip)
+			}
 		}
+	})
+}
+
+func FuzzMessageAddress(f *testing.F) {
+	seedAddresses := []string{
+		"/hello",
+		"/oscillator/4/frequency",
+	}
+
+	for _, seed := range seedAddresses {
+		f.Add(seed)
+	}
+
+	f.Fuzz(func(t *testing.T, address string) {
+		message := &osc.Message{
+			Address: address,
+			Args:    nil,
+		}
+
+		if !strings.HasPrefix(address, "/") {
+			t.Skip()
+		}
+		_, err := message.MarshalBinary()
+		require.NoError(t, err)
 	})
 }

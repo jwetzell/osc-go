@@ -328,3 +328,38 @@ func FuzzBundleFromBytes(f *testing.F) {
 		_, _ = osc.BundleFromBytes(data)
 	})
 }
+
+func FuzzBundleRoundTrip(f *testing.F) {
+	seedBytes := [][]byte{
+		{},
+		{35, 98, 117, 110, 100, 108, 101, 0, 0, 0, 0,
+			32, 0, 0, 0, 0, 0, 0, 0, 32, 47, 111,
+			115, 99, 105, 108, 108, 97, 116, 111, 114, 47, 52,
+			47, 102, 114, 101, 113, 117, 101, 110, 99, 121, 0,
+			44, 102, 0, 0, 67, 220, 0, 0},
+		{35, 98, 117, 110, 100, 108, 101, 0, // #bundle
+			0, 0, 0, 32, 0, 0, 0, 0, // time tag
+			0, 0, 0, 52, // content size
+			35, 98, 117, 110, 100, 108, 101, 0, // #bundle
+			0, 0, 0, 64, 0, 0, 0, 0, // time tag
+			0, 0, 0, 32, // content size
+			47, 111, 115, 99, 105, 108, 108, 97, 116, 111, 114, 47, 52,
+			47, 102, 114, 101, 113, 117, 101, 110, 99, 121, 0,
+			44, 102, 0, 0, 67, 220, 0, 0},
+	}
+
+	for _, seed := range seedBytes {
+		f.Add(seed)
+	}
+
+	f.Fuzz(func(t *testing.T, data []byte) {
+		b, err := osc.BundleFromBytes(data)
+		if err == nil {
+			require.NotNil(t, b)
+			roundTrip, err := b.MarshalBinary()
+			if err == nil {
+				require.Equal(t, data, roundTrip)
+			}
+		}
+	})
+}

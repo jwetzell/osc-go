@@ -1,6 +1,8 @@
 package osc_test
 
 import (
+	"fmt"
+	"math"
 	"reflect"
 	"testing"
 
@@ -237,4 +239,69 @@ func TestBadArgFromStringAndType(t *testing.T) {
 			require.EqualError(t, err, testCase.errorMsg)
 		})
 	}
+}
+
+func FuzzStringArg(f *testing.F) {
+	seedInts := []string{
+		"hello",
+		"world",
+		"123",
+		"true",
+		"false",
+	}
+
+	for _, seed := range seedInts {
+		f.Add(seed)
+	}
+
+	f.Fuzz(func(t *testing.T, value string) {
+		arg, err := osc.ArgFromStringAndType(value, 's')
+		require.NoError(t, err)
+		require.Equal(t, 's', arg.Type)
+		require.Equal(t, value, arg.Value)
+	})
+}
+
+func FuzzInt32Arg(f *testing.F) {
+	seedInts := []int32{
+		0,
+		1,
+		-1,
+		42,
+		math.MaxInt32,
+		math.MinInt32,
+	}
+
+	for _, seed := range seedInts {
+		f.Add(seed)
+	}
+
+	f.Fuzz(func(t *testing.T, value int32) {
+		arg, err := osc.ArgFromStringAndType(fmt.Sprintf("%d", value), 'i')
+		require.NoError(t, err)
+		require.Equal(t, 'i', arg.Type)
+		require.Equal(t, value, arg.Value)
+	})
+}
+
+func FuzzInt64Arg(f *testing.F) {
+	seedInts := []int64{
+		0,
+		1,
+		-1,
+		42,
+		math.MaxInt64,
+		math.MinInt64,
+	}
+
+	for _, seed := range seedInts {
+		f.Add(seed)
+	}
+
+	f.Fuzz(func(t *testing.T, value int64) {
+		arg, err := osc.ArgFromStringAndType(fmt.Sprintf("%d", value), 'h')
+		require.NoError(t, err)
+		require.Equal(t, 'h', arg.Type)
+		require.Equal(t, value, arg.Value)
+	})
 }
