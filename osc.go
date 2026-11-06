@@ -166,6 +166,13 @@ func argsToBuffer(args []Arg) ([]byte, error) {
 			} else {
 				return nil, errors.New("OSC arg had float64 type but non-float64 compatible value")
 			}
+		case 't':
+			if value, ok := arg.Value.(TimeTag); ok {
+				valueBytes := timeTagToOSCBytes(value)
+				argBuffers = append(argBuffers, valueBytes...)
+			} else {
+				return nil, errors.New("OSC arg had time tag type but non-time tag value")
+			}
 		default:
 			return nil, fmt.Errorf("unsupported OSC argument type: %c", arg.Type)
 		}
