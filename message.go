@@ -24,14 +24,16 @@ func (m *Message) ToBytes() ([]byte, error) {
 	}
 	addressBuffer := stringToOSCBytes(m.Address)
 
-	typeStringBuffer := stringToOSCBytes(typeString)
+	oscBuffer := addressBuffer
 
-	argsBuffer, err := argsToBuffer(m.Args)
-	if err != nil {
-		return nil, err
-	}
-	oscBuffer := append(addressBuffer, typeStringBuffer...)
-	if len(argsBuffer) > 0 {
+	if m.Args != nil {
+		typeStringBuffer := stringToOSCBytes(typeString)
+
+		argsBuffer, err := argsToBuffer(m.Args)
+		if err != nil {
+			return nil, err
+		}
+		oscBuffer = append(oscBuffer, typeStringBuffer...)
 		oscBuffer = append(oscBuffer, argsBuffer...)
 	}
 
@@ -68,13 +70,19 @@ func MessageFromBytes(bytes []byte) (*Message, error) {
 
 	oscMessage := Message{
 		Address: address,
-		Args:    []Arg{},
+		Args:    nil,
 	}
 
 	if len(typeAndArgBytes) == 0 {
 		// NOTE(jwetzell): no type string return early.
 		return &oscMessage, nil
 	}
+
+	if typeAndArgBytes[0] != ',' {
+		return nil, errors.New("type string is malformed")
+	}
+
+	oscMessage.Args = []Arg{}
 
 	typeString, argBytes, err := readOSCString(typeAndArgBytes)
 

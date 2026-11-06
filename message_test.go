@@ -376,7 +376,6 @@ func TestGoodOSCMessageDecoding(t *testing.T) {
 			bytes: []byte{47, 104, 101, 108, 108, 111, 0, 0},
 			expected: &osc.Message{
 				Address: "/hello",
-				Args:    []osc.Arg{},
 			},
 		},
 		{

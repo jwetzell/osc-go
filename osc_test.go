@@ -18,7 +18,6 @@ func TestGoodPacketFromBytes(t *testing.T) {
 			name: "message with no args",
 			expected: &osc.Message{
 				Address: "/hello",
-				Args:    []osc.Arg{},
 			},
 			bytes: []byte{47, 104, 101, 108, 108, 111, 0, 0},
 		},
