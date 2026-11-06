@@ -129,23 +129,6 @@ func TestGoodOSCMessageEncoding(t *testing.T) {
 				47, 104, 101, 108, 108, 111, 0, 0, 44, 100, 0, 0, 0x40, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 			},
 		},
-		// TODO(jwetzell): get array args working
-		// {
-		// 	name: "simple address array arg",
-		// 	message: OSCMessage{
-		// 		Address: "/hello",
-		// 		Args: []OSCArg{
-		// 			[]OSCArg{
-		//				{Type: 'd', Value: 12.7654763},
-		// 				{Type: 'i', Value: 1000},
-		//			},
-		// 		},
-		// 	},
-		// 	expected: []byte{
-		// 		47, 104, 101, 108, 108, 111, 0, 0, 44, 91, 100, 105, 93, 0, 0, 0, 0x40, 0x29, 0x87, 0xec, 0x82, 0x74, 0xb9, 0xe6,
-		// 		0, 0, 3, 232,
-		// 	},
-		// },
 		{
 			name:    "osc 1.0 spec example 1",
 			message: &osc.Message{Address: "/oscillator/4/frequency", Args: []osc.Arg{{Type: 'f', Value: float32(440)}}},
@@ -264,6 +247,14 @@ func TestBadOSCMessageEncoding(t *testing.T) {
 				Args:    []osc.Arg{{Type: 'r', Value: "not a color"}},
 			},
 			errorString: "OSC arg had color type but non-color value",
+		},
+		{
+			name: "time tag arg that is not a TimeTag",
+			message: &osc.Message{
+				Address: "/hello",
+				Args:    []osc.Arg{{Type: 't', Value: "not a time tag"}},
+			},
+			errorString: "OSC arg had time tag type but non-time tag value",
 		},
 		{
 			name: "empty arg type",
