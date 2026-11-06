@@ -104,7 +104,7 @@ func handleTCPConnection(conn net.Conn, useSLIP bool, format string) {
 			continue
 		}
 
-		oscPacket, _, err := osc.PacketFromBytes(buffer[0:bytesRead])
+		oscPacket, err := osc.PacketFromBytes(buffer[0:bytesRead])
 		if err != nil {
 			slog.Default().Error("Error parsing OSC packet", "err", err)
 			return
@@ -161,7 +161,7 @@ func listenUDP(netAddress string, format string) {
 			return
 		}
 
-		oscPacket, _, err := osc.PacketFromBytes(buffer[0:bytesRead])
+		oscPacket, err := osc.PacketFromBytes(buffer[0:bytesRead])
 
 		if err != nil {
 			slog.Default().Error("Error parsing OSC packet", "err", err)

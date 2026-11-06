@@ -29,6 +29,27 @@ func TestGoodOSCBundleEncoding(t *testing.T) {
 				47, 102, 114, 101, 113, 117, 101, 110, 99, 121, 0,
 				44, 102, 0, 0, 67, 220, 0, 0},
 		},
+		{
+			name: "multiple messages",
+			bundle: &osc.Bundle{
+				TimeTag: osc.TimeTag{
+					Seconds:           32,
+					FractionalSeconds: 0,
+				},
+				Contents: []osc.Packet{
+					&osc.Message{Address: "/oscillator/4/frequency", Args: []osc.Arg{{Type: 'f', Value: float32(440)}}},
+					&osc.Message{Address: "/oscillator/4/frequency", Args: []osc.Arg{{Type: 'f', Value: float32(440)}}},
+				},
+			},
+			expected: []byte{35, 98, 117, 110, 100, 108, 101, 0, 0, 0, 0,
+				32, 0, 0, 0, 0, 0, 0, 0, 32, 47, 111,
+				115, 99, 105, 108, 108, 97, 116, 111, 114, 47, 52,
+				47, 102, 114, 101, 113, 117, 101, 110, 99, 121, 0,
+				44, 102, 0, 0, 67, 220, 0, 0, 0, 0, 0, 32, 47, 111, 115,
+				99, 105, 108, 108, 97, 116, 111, 114, 47, 52, 47,
+				102, 114, 101, 113, 117, 101, 110, 99, 121, 0,
+				44, 102, 0, 0, 67, 220, 0, 0},
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -119,14 +140,34 @@ func TestGoodOSCBundleDecoding(t *testing.T) {
 				47, 102, 114, 101, 113, 117, 101, 110, 99, 121, 0,
 				44, 102, 0, 0, 67, 220, 0, 0},
 		},
+		{
+			name: "multiple messages",
+			expected: &osc.Bundle{
+				TimeTag: osc.TimeTag{
+					Seconds:           32,
+					FractionalSeconds: 0,
+				},
+				Contents: []osc.Packet{
+					&osc.Message{Address: "/oscillator/4/frequency", Args: []osc.Arg{{Type: 'f', Value: float32(440)}}},
+					&osc.Message{Address: "/oscillator/4/frequency", Args: []osc.Arg{{Type: 'f', Value: float32(440)}}},
+				},
+			},
+			bytes: []byte{35, 98, 117, 110, 100, 108, 101, 0, 0, 0, 0,
+				32, 0, 0, 0, 0, 0, 0, 0, 32, 47, 111,
+				115, 99, 105, 108, 108, 97, 116, 111, 114, 47, 52,
+				47, 102, 114, 101, 113, 117, 101, 110, 99, 121, 0,
+				44, 102, 0, 0, 67, 220, 0, 0, 0, 0, 0, 32, 47, 111, 115,
+				99, 105, 108, 108, 97, 116, 111, 114, 47, 52, 47,
+				102, 114, 101, 113, 117, 101, 110, 99, 121, 0,
+				44, 102, 0, 0, 67, 220, 0, 0},
+		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			actual, remainingBytes, err := osc.BundleFromBytes(testCase.bytes)
+			actual, err := osc.BundleFromBytes(testCase.bytes)
 
 			require.NoError(t, err)
-			require.Empty(t, remainingBytes)
 			require.Equal(t, testCase.expected, actual)
 		})
 	}
@@ -200,7 +241,7 @@ func TestBadOSCBundleDecoding(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			_, _, err := osc.BundleFromBytes(testCase.bytes)
+			_, err := osc.BundleFromBytes(testCase.bytes)
 
 			require.Error(t, err)
 			require.EqualError(t, err, testCase.errorString)
@@ -241,7 +282,7 @@ func TestGoodOSCBundleUnmarshalBinary(t *testing.T) {
 	err := message.UnmarshalBinary(bytes)
 	require.NoError(t, err)
 
-	expected, _, err := osc.BundleFromBytes(bytes)
+	expected, err := osc.BundleFromBytes(bytes)
 	require.NoError(t, err)
 
 	require.Equal(t, expected, message)
@@ -255,7 +296,7 @@ func TestBadOSCBundleUnmarshalBinary(t *testing.T) {
 	gotErr := message.UnmarshalBinary(bytes)
 	require.Error(t, gotErr)
 
-	_, _, expectedErr := osc.BundleFromBytes(bytes)
+	_, expectedErr := osc.BundleFromBytes(bytes)
 
 	require.EqualError(t, gotErr, expectedErr.Error())
 }
@@ -284,6 +325,6 @@ func FuzzBundleFromBytes(f *testing.F) {
 	}
 
 	f.Fuzz(func(t *testing.T, data []byte) {
-		_, _, _ = osc.BundleFromBytes(data)
+		_, _ = osc.BundleFromBytes(data)
 	})
 }

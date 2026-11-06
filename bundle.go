@@ -31,7 +31,7 @@ func (b Bundle) MarshalBinary() ([]byte, error) {
 }
 
 func (b *Bundle) UnmarshalBinary(data []byte) error {
-	msg, _, err := BundleFromBytes(data)
+	msg, err := BundleFromBytes(data)
 	if err != nil {
 		return err
 	}
@@ -40,68 +40,79 @@ func (b *Bundle) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-func BundleFromBytes(bytes []byte) (*Bundle, []byte, error) {
+func BundleFromBytes(bytes []byte) (*Bundle, error) {
 	if len(bytes) < 20 {
-		return nil, bytes, errors.New("OSC Bundle has to be at least 20 bytes")
+		return nil, errors.New("OSC Bundle has to be at least 20 bytes")
 	}
 
 	if bytes[0] != 35 {
-		return nil, bytes, errors.New("OSC Bundle must start with a #")
+		return nil, errors.New("OSC Bundle must start with a #")
 	}
 
 	bundleHeader, bytesAfterBundleHeader, err := readOSCString(bytes)
 
 	if err != nil {
-		return nil, bytes, err
+		return nil, err
 	}
 
 	if bundleHeader != "#bundle" {
-		return nil, bytesAfterBundleHeader, errors.New("OSC Bundle must start with #bundle string")
+		return nil, errors.New("OSC Bundle must start with #bundle string")
 	}
 
-	timeTag, bytesAfterTimeTag, _ := readOSCTimeTag(bytesAfterBundleHeader)
+	timeTag, bytesAfterTimeTag, err := readOSCTimeTag(bytesAfterBundleHeader)
+	if err != nil {
+		return nil, err
+	}
 
 	bundleContents := []Packet{}
 
 	remainingBytes := bytesAfterTimeTag
 
-	contentSize, bytesAfterContentSize, _ := readOSCInt32(remainingBytes)
-
-	remainingBytes = bytesAfterContentSize
-
-	if contentSize <= 0 {
-		return nil, remainingBytes, errors.New("bundle content size must be positive")
-	}
-
-	if len(remainingBytes) < int(contentSize) {
-		return nil, remainingBytes, errors.New("bundle doesn't have enough bytes for the content size it specifies")
-	}
-
-	bundleContentBytes := remainingBytes[0:contentSize]
-
-	switch bundleContentBytes[0] {
-	case 35: // #
-		content, _, err := BundleFromBytes(bundleContentBytes)
+	for {
+		contentSize, bytesAfterContentSize, err := readOSCInt32(remainingBytes)
 		if err != nil {
-			return nil, remainingBytes, err
+			return nil, err
 		}
-		bundleContents = append(bundleContents, content)
-	case 47: // /
-		content, err := MessageFromBytes(bundleContentBytes)
-		if err != nil {
-			return nil, remainingBytes, err
+
+		remainingBytes = bytesAfterContentSize
+
+		if contentSize <= 0 {
+			return nil, errors.New("bundle content size must be positive")
 		}
-		bundleContents = append(bundleContents, content)
-	default:
-		return nil, remainingBytes, errors.New("bundle contents does not look a bundle or message")
+
+		if len(remainingBytes) < int(contentSize) {
+			return nil, errors.New("bundle doesn't have enough bytes for the content size it specifies")
+		}
+
+		bundleContentBytes := remainingBytes[0:contentSize]
+
+		switch bundleContentBytes[0] {
+		case 35: // #
+			content, err := BundleFromBytes(bundleContentBytes)
+			if err != nil {
+				return nil, err
+			}
+			bundleContents = append(bundleContents, content)
+		case 47: // /
+			content, err := MessageFromBytes(bundleContentBytes)
+			if err != nil {
+				return nil, err
+			}
+			bundleContents = append(bundleContents, content)
+		default:
+			return nil, errors.New("bundle contents does not look a bundle or message")
+		}
+
+		remainingBytes = remainingBytes[contentSize:]
+
+		if len(remainingBytes) == 0 {
+			break
+		}
 	}
-	remainingBytes = bytesAfterContentSize[contentSize:]
 
 	return &Bundle{
-			TimeTag:  timeTag,
-			Contents: bundleContents,
-		},
-		remainingBytes,
-		nil
+		TimeTag:  timeTag,
+		Contents: bundleContents,
+	}, nil
 
 }

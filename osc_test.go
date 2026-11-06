@@ -40,10 +40,9 @@ func TestGoodPacketFromBytes(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			got, remainingBytes, err := osc.PacketFromBytes(testCase.bytes)
+			got, err := osc.PacketFromBytes(testCase.bytes)
 
 			require.NoError(t, err)
-			require.Empty(t, remainingBytes)
 			require.Equal(t, testCase.expected, got)
 		})
 	}
@@ -80,7 +79,7 @@ func TestBadPacketFromBytes(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			_, _, err := osc.PacketFromBytes(testCase.bytes)
+			_, err := osc.PacketFromBytes(testCase.bytes)
 
 			require.Error(t, err)
 			require.EqualError(t, err, testCase.errorString)

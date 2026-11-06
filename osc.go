@@ -378,25 +378,25 @@ func readOSCArg(bytes []byte, oscType rune) (Arg, []byte, error) {
 	return oscArg, remainingBytes, readArgError
 }
 
-func PacketFromBytes(bytes []byte) (Packet, []byte, error) {
+func PacketFromBytes(bytes []byte) (Packet, error) {
 	if len(bytes) == 0 {
-		return nil, bytes, errors.New("cannot create OSC Packet from empty byte array")
+		return nil, errors.New("cannot create OSC Packet from empty byte array")
 	}
 
 	switch bytes[0] {
 	case '#':
-		bundle, remainingBytes, err := BundleFromBytes(bytes)
+		bundle, err := BundleFromBytes(bytes)
 		if err != nil {
-			return nil, bytes, err
+			return nil, err
 		}
-		return bundle, remainingBytes, nil
+		return bundle, nil
 	case '/':
 		message, err := MessageFromBytes(bytes)
 		if err != nil {
-			return nil, bytes, err
+			return nil, err
 		}
-		return message, []byte{}, nil
+		return message, nil
 	default:
-		return nil, bytes, errors.New("OSC Packet must start with # for bundle or / for message")
+		return nil, errors.New("OSC Packet must start with # for bundle or / for message")
 	}
 }
